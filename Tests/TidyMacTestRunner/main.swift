@@ -10,6 +10,7 @@ runLocalizationTests()
 await runSafetyTests()
 await runFileAccessTests()
 await runScannerTests()
+runDashboardAndCleanupTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {

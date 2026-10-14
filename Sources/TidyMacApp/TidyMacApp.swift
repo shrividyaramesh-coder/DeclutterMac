@@ -75,18 +75,25 @@ struct MainContentView: View {
 
     @ViewBuilder
     private func detailView(for item: AppNavigationItem) -> some View {
-        VStack(spacing: 20) {
-            Image(systemName: item.systemImage)
-                .font(.system(size: 48))
-                .foregroundStyle(.tint)
-            Text(item.localizedTitle)
-                .font(.title)
-                .bold()
-            Text(localized("app.tagline"))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        switch item {
+        case .overview:
+            DashboardView()
+        case .cleanup:
+            CleanupView()
+        default:
+            VStack(spacing: 20) {
+                Image(systemName: item.systemImage)
+                    .font(.system(size: 48))
+                    .foregroundStyle(.tint)
+                Text(item.localizedTitle)
+                    .font(.title)
+                    .bold()
+                Text(localized("app.tagline"))
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
