@@ -58,10 +58,10 @@ func runOrganizerTests() async {
     
     // 3. User-Learned Preferences Test ("Learn from edits")
     if let pdfGroupIndex = groups.firstIndex(where: { $0.name == "Documents/PDFs" }) {
-        await engine.updateCategory(
+        groups = await engine.updateCategory(
             groupIndex: pdfGroupIndex,
             newName: "Finance/Tax_2025",
-            in: &groups,
+            groups: groups,
             destRoot: destFolder
         )
     }

@@ -85,28 +85,30 @@ public actor FolderOrganizerEngine {
     public func updateCategory(
         groupIndex: Int,
         newName: String,
-        in groups: inout [OrganizationCategoryGroup],
+        groups: [OrganizationCategoryGroup],
         destRoot: URL
-    ) async {
-        guard groupIndex >= 0 && groupIndex < groups.count else { return }
+    ) async -> [OrganizationCategoryGroup] {
+        var updatedGroups = groups
+        guard groupIndex >= 0 && groupIndex < updatedGroups.count else { return updatedGroups }
         let trimmed = newName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty else { return updatedGroups }
         
-        groups[groupIndex].name = trimmed
+        updatedGroups[groupIndex].name = trimmed
         let newDestFolder = destRoot.appendingPathComponent(trimmed)
-        groups[groupIndex].destinationFolder = newDestFolder
+        updatedGroups[groupIndex].destinationFolder = newDestFolder
         
-        for i in 0..<groups[groupIndex].moves.count {
-            let originalName = groups[groupIndex].moves[i].originalURL.lastPathComponent
-            groups[groupIndex].moves[i].categoryName = trimmed
-            groups[groupIndex].moves[i].targetURL = resolveCollisionSafeTarget(for: originalName, in: newDestFolder)
+        for i in 0..<updatedGroups[groupIndex].moves.count {
+            let originalName = updatedGroups[groupIndex].moves[i].originalURL.lastPathComponent
+            updatedGroups[groupIndex].moves[i].categoryName = trimmed
+            updatedGroups[groupIndex].moves[i].targetURL = resolveCollisionSafeTarget(for: originalName, in: newDestFolder)
             
             // Learn preference for this extension
-            let ext = groups[groupIndex].moves[i].originalURL.pathExtension.lowercased()
+            let ext = updatedGroups[groupIndex].moves[i].originalURL.pathExtension.lowercased()
             if !ext.isEmpty {
                 await preferencesStore.rememberPreference(extensionKey: ext, category: trimmed)
             }
         }
+        return updatedGroups
     }
     
     /// Executes confirmed file relocations with guaranteed undo recording.

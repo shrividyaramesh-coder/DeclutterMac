@@ -50,7 +50,7 @@ public struct RulesManagementView: View {
                     Image(systemName: "checklist.checked")
                         .font(.title2)
                         .foregroundColor(.accentColor)
-                    Text(localization.localized(.navRules))
+                    Text(localized("nav.rules"))
                         .font(.title2)
                         .fontWeight(.bold)
                 }

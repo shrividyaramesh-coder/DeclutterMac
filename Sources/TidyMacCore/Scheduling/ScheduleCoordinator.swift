@@ -1,7 +1,7 @@
 import Foundation
 
 /// Scheduling frequency options for continuous background cleanup.
-public enum ScheduleFrequency: Codable, Sendable, Equatable {
+public enum ScheduleFrequency: Codable, Sendable, Equatable, Hashable {
     case daily
     case weekly
     case monthly

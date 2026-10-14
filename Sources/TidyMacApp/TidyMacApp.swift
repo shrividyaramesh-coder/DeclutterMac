@@ -92,20 +92,10 @@ struct MainContentView: View {
             RulesManagementView()
         case .history:
             HistoryView()
-        default:
-            VStack(spacing: 20) {
-                Image(systemName: item.systemImage)
-                    .font(.system(size: 48))
-                    .foregroundStyle(.tint)
-                Text(item.localizedTitle)
-                    .font(.title)
-                    .bold()
-                Text(localized("app.tagline"))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .privacy:
+            PrivacySecurityView()
+        case .settings:
+            SettingsView()
         }
     }
 }

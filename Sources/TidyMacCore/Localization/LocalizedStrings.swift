@@ -12,7 +12,9 @@ public enum LocalizedStrings {
             "nav.apps": "Apps",
             "nav.organize": "Organize",
             "nav.rules": "Rules",
+            "nav.agent": "AI Agent",
             "nav.history": "History",
+            "nav.privacy": "Privacy",
             "nav.settings": "Settings",
             
             "action.scan": "Scan Now",

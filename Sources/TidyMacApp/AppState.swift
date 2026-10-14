@@ -8,7 +8,9 @@ public enum AppNavigationItem: String, CaseIterable, Identifiable {
     case apps
     case organize
     case rules
+    case agent
     case history
+    case privacy
     case settings
 
     public var id: String { rawValue }
@@ -21,7 +23,9 @@ public enum AppNavigationItem: String, CaseIterable, Identifiable {
         case .apps: return localized("nav.apps")
         case .organize: return localized("nav.organize")
         case .rules: return localized("nav.rules")
+        case .agent: return localized("nav.agent")
         case .history: return localized("nav.history")
+        case .privacy: return localized("nav.privacy")
         case .settings: return localized("nav.settings")
         }
     }
@@ -34,7 +38,9 @@ public enum AppNavigationItem: String, CaseIterable, Identifiable {
         case .apps: return "app.badge.checkmark"
         case .organize: return "folder.badge.gearshape"
         case .rules: return "slider.horizontal.3"
+        case .agent: return "wand.and.stars"
         case .history: return "clock.arrow.circlepath"
+        case .privacy: return "hand.raised.shield.fill"
         case .settings: return "gearshape.fill"
         }
     }

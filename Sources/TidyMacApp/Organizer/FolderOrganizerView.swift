@@ -61,7 +61,7 @@ public struct FolderOrganizerView: View {
                     Image(systemName: "folder.badge.gearshape")
                         .font(.title2)
                         .foregroundColor(.accentColor)
-                    Text(localization.localized(.navOrganize))
+                    Text(localized("nav.organize"))
                         .font(.title2)
                         .fontWeight(.bold)
                 }
@@ -201,12 +201,15 @@ public struct FolderOrganizerView: View {
                         guard let folder = selectedFolder else { return }
                         let destRoot = folder.appendingPathComponent("Organized")
                         Task {
-                            await FolderOrganizerEngine.shared.updateCategory(
+                            let updated = await FolderOrganizerEngine.shared.updateCategory(
                                 groupIndex: index,
                                 newName: newName,
-                                in: &categoryGroups,
+                                groups: categoryGroups,
                                 destRoot: destRoot
                             )
+                            await MainActor.run {
+                                self.categoryGroups = updated
+                            }
                         }
                     }
                 ))

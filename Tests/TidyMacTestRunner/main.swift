@@ -17,6 +17,7 @@ await runUninstallerTests()
 await runAgentPlannerTests()
 await runOrganizerTests()
 await runRuleEngineTests()
+await runEndToEndFixtureTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {
