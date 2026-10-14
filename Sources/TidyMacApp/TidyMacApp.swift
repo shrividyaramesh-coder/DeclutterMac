@@ -6,6 +6,18 @@ struct TidyMacApp: App {
     @StateObject private var appState = AppState.shared
     @StateObject private var localization = LocalizationManager.shared
 
+    init() {
+        if CommandLine.arguments.contains("--scheduled-run") {
+            let semaphore = DispatchSemaphore(value: 0)
+            Task.detached {
+                _ = try? await ScheduleCoordinator.shared.executeScheduledRun()
+                semaphore.signal()
+            }
+            semaphore.wait()
+            exit(0)
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             MainContentView()
@@ -58,6 +70,8 @@ struct TidyMacApp: App {
 struct MainContentView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var localization: LocalizationManager
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding: Bool = false
+    @State private var showOnboarding: Bool = false
 
     var body: some View {
         NavigationSplitView {
@@ -70,6 +84,15 @@ struct MainContentView: View {
             .frame(minWidth: 200)
         } detail: {
             detailView(for: appState.selectedNavigation)
+        }
+        .onAppear {
+            if !hasCompletedOnboarding {
+                showOnboarding = true
+            }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView()
+                .environmentObject(appState)
         }
     }
 

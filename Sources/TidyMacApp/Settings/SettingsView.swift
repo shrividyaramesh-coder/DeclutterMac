@@ -15,6 +15,7 @@ public struct SettingsView: View {
     @State private var managedFolders: [URL] = []
     @State private var launchAtLogin: Bool = true
     @State private var showMenuBarIcon: Bool = true
+    @State private var showOnboardingSheet: Bool = false
     
     public init() {}
     
@@ -41,6 +42,10 @@ public struct SettingsView: View {
             .padding(28)
         }
         .background(Color(NSColor.windowBackgroundColor))
+        .sheet(isPresented: $showOnboardingSheet) {
+            OnboardingView()
+                .environmentObject(AppState.shared)
+        }
         .task {
             await loadData()
         }
@@ -94,6 +99,23 @@ public struct SettingsView: View {
                 
                 // Launch at Login Toggle
                 Toggle("Launch Tidy Mac at Login", isOn: $launchAtLogin)
+                
+                Divider()
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Onboarding & Permissions Wizard")
+                            .font(.body)
+                        Text("Re-run initial setup, manage approved folders, or review Full Disk Access.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Button("Review Permissions") {
+                        showOnboardingSheet = true
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
             .padding(16)
             .background(Color(NSColor.controlBackgroundColor))

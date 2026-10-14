@@ -18,6 +18,7 @@ await runAgentPlannerTests()
 await runOrganizerTests()
 await runRuleEngineTests()
 await runEndToEndFixtureTests()
+runLaunchAgentAndAppPolishTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {

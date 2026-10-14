@@ -83,7 +83,15 @@ public struct RulesManagementView: View {
                     get: { scheduleSettings.isEnabled },
                     set: { enabled in
                         scheduleSettings.isEnabled = enabled
-                        Task { await ScheduleCoordinator.shared.updateSettings(scheduleSettings) }
+                        Task {
+                            await ScheduleCoordinator.shared.updateSettings(scheduleSettings)
+                            let exeURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
+                            if enabled {
+                                _ = try? LaunchAgentManager.shared.install(executableURL: exeURL, frequency: scheduleSettings.frequency)
+                            } else {
+                                LaunchAgentManager.shared.uninstall()
+                            }
+                        }
                     }
                 ))
                 .labelsHidden()
@@ -103,7 +111,11 @@ public struct RulesManagementView: View {
                         get: { scheduleSettings.frequency },
                         set: { freq in
                             scheduleSettings.frequency = freq
-                            Task { await ScheduleCoordinator.shared.updateSettings(scheduleSettings) }
+                            Task {
+                                await ScheduleCoordinator.shared.updateSettings(scheduleSettings)
+                                let exeURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
+                                _ = try? LaunchAgentManager.shared.install(executableURL: exeURL, frequency: freq)
+                            }
                         }
                     )) {
                         Text("Daily").tag(ScheduleFrequency.daily)

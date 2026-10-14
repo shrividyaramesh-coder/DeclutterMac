@@ -107,10 +107,28 @@ swift build
 swift build -c release
 ```
 
+### Packaging Native macOS App Bundle (`TidyMac.app`)
+```bash
+# Package into build/TidyMac.app with custom AppIcon.icns, Info.plist, and ad-hoc codesign
+bash scripts/package_app.sh
+
+# Install into ~/Applications
+bash scripts/install.sh
+
+# Launch the app
+open build/TidyMac.app
+```
+
 ### Running Automated Tests
 ```bash
-# Run the complete test suite (333 automated tests)
+# Run the complete test suite (357 automated tests, 100% pass rate)
 swift run TidyMacTestRunner
+```
+
+### Headless Background Scheduling
+```bash
+# Trigger scheduled cleanup headless (as invoked by launchd LaunchAgent)
+swift run TidyMacApp --scheduled-run
 ```
 
 ---
@@ -120,6 +138,10 @@ swift run TidyMacTestRunner
 ```
 Tidymac/
 ├── Package.swift
+├── scripts/
+│   ├── package_app.sh       # Packages build/TidyMac.app with codesigning
+│   ├── generate_icon.swift  # Synthesizes AppIcon.icns across all macOS resolutions
+│   └── install.sh           # Installs TidyMac.app to ~/Applications
 ├── Sources/
 │   ├── TidyMacCore/
 │   │   ├── Safety/          # PathValidator, TrashMover
@@ -130,25 +152,26 @@ Tidymac/
 │   │   ├── Agent/           # OfflineHeuristicParser, LLMClient, CleaningPlan, PlanExecutor
 │   │   ├── Organizer/       # FolderOrganizerEngine, CategoryPreferencesStore
 │   │   ├── Rules/           # RuleEngine, RuleModel, BuiltInRuleTemplates
-│   │   ├── Scheduling/      # ScheduleCoordinator, UserNotificationService
+│   │   ├── Scheduling/      # ScheduleCoordinator, LaunchAgentManager, UserNotificationService
 │   │   ├── Storage/         # UndoJournal
 │   │   ├── Licensing/       # LicenseProvider, LocalLicenseProvider
 │   │   ├── Localization/    # LocalizationManager, LocalizedStrings
 │   │   └── Models/          # FileItem, RiskLabel, ScanCategory, StorageSummary, JournalEntry
 │   └── TidyMacApp/
-│       ├── Dashboard/       # DashboardView, DiskUsageBar
+│       ├── Onboarding/      # OnboardingView (FDA setup & folder picker)
+│       ├── Dashboard/       # DashboardView (with FDA status banner), DiskUsageBar
 │       ├── Cleanup/         # CleanupView, SpacePreviewView, CleanupItemRow
 │       ├── Duplicates/      # DuplicateFinderView
 │       ├── Uninstaller/     # AppUninstallerView
 │       ├── Agent/           # AgentChatView
 │       ├── Organizer/       # FolderOrganizerView
-│       ├── Rules/           # RulesManagementView
+│       ├── Rules/           # RulesManagementView (with LaunchAgent daemon sync)
 │       ├── History/         # HistoryView
 │       ├── Settings/        # SettingsView
 │       ├── Privacy/         # PrivacySecurityView
-│       └── TidyMacApp.swift # Main window, NavigationSplitView, MenuBarExtra
+│       └── TidyMacApp.swift # Main window, MenuBarExtra, headless CLI interceptor
 ├── Tests/
-│   └── TidyMacTestRunner/   # 333 automated tests covering all modules & E2E fixtures
+│   └── TidyMacTestRunner/   # 357 automated tests covering all modules & E2E fixtures
 └── docs/
     ├── plans/               # Master engineering plans
     └── solutions/           # Documented compounding lessons learned

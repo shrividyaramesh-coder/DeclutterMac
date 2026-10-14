@@ -41,15 +41,30 @@ public struct CategoryClassifier: Sendable {
         if path.contains("Library/Caches/Google/Chrome") ||
            path.contains("Library/Caches/com.apple.Safari") ||
            path.contains("Library/Caches/company.thebrowser.Browser") || // Arc
-           path.contains("Library/Caches/org.mozilla.firefox") {
+           path.contains("Library/Caches/org.mozilla.firefox") ||
+           path.contains("Library/Caches/com.brave.Browser") ||
+           path.contains("Library/Caches/com.microsoft.edgemac") {
             return .browserCaches
         }
 
         // 4. Messaging media caches
         if path.contains("Library/Caches/com.tinyspeck.slackmacgap") ||
            path.contains("Library/Caches/ru.keepcoder.Telegram") ||
-           path.contains("Library/Caches/net.whatsapp.WhatsApp") {
+           path.contains("Library/Caches/net.whatsapp.WhatsApp") ||
+           path.contains("Library/Caches/com.hnc.Discord") ||
+           path.contains("Library/Caches/com.microsoft.teams2") {
             return .messagingMedia
+        }
+
+        // 4b. Creative and work apps caches (video, design, 3D, and audio)
+        if path.contains("Library/Caches/Adobe") ||
+           path.contains("Library/Application Support/Adobe/Common/Media Cache Files") ||
+           path.contains("Library/Caches/com.apple.FinalCut") ||
+           path.contains("Library/Caches/com.figma.Desktop") ||
+           path.contains("Library/Caches/com.bohemiancoding.sketch3") ||
+           path.contains("Library/Caches/blender") ||
+           path.contains("Library/Caches/com.canva.CanvaDesktop") {
+            return .caches
         }
 
         // 5. General logs

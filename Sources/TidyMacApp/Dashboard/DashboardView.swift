@@ -3,6 +3,7 @@ import TidyMacCore
 
 public struct DashboardView: View {
     @EnvironmentObject var appState: AppState
+    @State private var showOnboardingSheet: Bool = false
 
     public init() {}
 
@@ -29,6 +30,11 @@ public struct DashboardView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                }
+
+                // Permissions Warning Banner if Full Disk Access is not granted
+                if !appState.hasFullDiskAccess {
+                    permissionBanner
                 }
 
                 // Storage Bar
@@ -73,6 +79,51 @@ public struct DashboardView: View {
             }
             .padding(24)
         }
+        .onAppear {
+            appState.hasFullDiskAccess = PermissionsManager.shared.checkFullDiskAccess()
+        }
+        .sheet(isPresented: $showOnboardingSheet) {
+            OnboardingView()
+                .environmentObject(appState)
+        }
+    }
+
+    private var permissionBanner: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title2)
+                .foregroundStyle(.orange)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(localized("permission.fda_title"))
+                    .font(.subheadline)
+                    .bold()
+                Text(localized("permission.fda_desc"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+            
+            Button("Grant Access") {
+                PermissionsManager.shared.openSystemSettings()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            
+            Button("Learn More") {
+                showOnboardingSheet = true
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(12)
+        .background(Color.orange.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
     }
 
     private func metricCard(title: String, value: String, systemImage: String, color: Color) -> some View {
