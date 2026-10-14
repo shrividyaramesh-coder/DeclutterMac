@@ -84,6 +84,8 @@ struct MainContentView: View {
             DuplicateFinderView()
         case .apps:
             AppUninstallerView()
+        case .agent:
+            AgentChatView()
         case .history:
             HistoryView()
         default:

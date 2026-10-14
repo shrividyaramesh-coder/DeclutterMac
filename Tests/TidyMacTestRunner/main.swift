@@ -14,6 +14,7 @@ runDashboardAndCleanupTests()
 await runUndoJournalTests()
 await runDuplicateTests()
 await runUninstallerTests()
+await runAgentPlannerTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {
