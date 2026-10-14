@@ -52,8 +52,9 @@ public actor FolderOrganizerEngine {
             let itemName = itemURL.lastPathComponent
             if itemName.hasPrefix(".") { continue }
             
-            // Check if item is a directory
-            let values = try? itemURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
+            // Check if item is a directory or symlink
+            let values = try? itemURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .isSymbolicLinkKey])
+            if values?.isSymbolicLink == true { continue }
             let isDirectory = values?.isDirectory ?? false
             
             // If it's a reserved category folder at the top level of targetFolder, skip it
