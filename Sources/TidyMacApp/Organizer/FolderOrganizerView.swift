@@ -199,7 +199,7 @@ public struct FolderOrganizerView: View {
                     get: { categoryGroups[index].name },
                     set: { newName in
                         guard let folder = selectedFolder else { return }
-                        let destRoot = folder.appendingPathComponent("Organized")
+                        let destRoot = folder
                         Task {
                             let updated = await FolderOrganizerEngine.shared.updateCategory(
                                 groupIndex: index,

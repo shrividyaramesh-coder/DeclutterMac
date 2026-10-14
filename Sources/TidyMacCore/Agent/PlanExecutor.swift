@@ -118,9 +118,27 @@ public actor PlanExecutor {
             case .move:
                 guard let destDir = match.destinationFolder else { continue }
                 let destFolderURL = URL(fileURLWithPath: destDir)
-                try? FileManager.default.createDirectory(at: destFolderURL, withIntermediateDirectories: true)
                 
-                let targetURL = resolveCollision(for: fileURL.lastPathComponent, in: destFolderURL)
+                // If destination folder is the target folder itself (organizing in-place),
+                // categorize the file into its category subfolder (e.g. Downloads/Documents/PDFs)
+                let categoryDestFolder: URL
+                if fileURL.deletingLastPathComponent().standardizedFileURL == destFolderURL.standardizedFileURL ||
+                   destFolderURL.standardizedFileURL.path == fileURL.deletingLastPathComponent().path {
+                    let ext = fileURL.pathExtension.lowercased()
+                    let categoryName = FolderOrganizerEngine.defaultCategoryName(forExtension: ext, filename: fileURL.lastPathComponent)
+                    categoryDestFolder = destFolderURL.appendingPathComponent(categoryName)
+                } else {
+                    categoryDestFolder = destFolderURL
+                }
+                
+                // If file is already inside its destination folder, skip
+                if fileURL.deletingLastPathComponent().standardizedFileURL == categoryDestFolder.standardizedFileURL {
+                    continue
+                }
+                
+                try? FileManager.default.createDirectory(at: categoryDestFolder, withIntermediateDirectories: true)
+                let targetURL = resolveCollision(for: fileURL.lastPathComponent, in: categoryDestFolder)
+                
                 do {
                     try FileManager.default.moveItem(at: fileURL, to: targetURL)
                     let entry = JournalEntry(

@@ -21,7 +21,7 @@ public actor FolderOrganizerEngine {
         targetFolder: URL,
         baseDestination: URL? = nil
     ) async -> [OrganizationCategoryGroup] {
-        let destRoot = baseDestination ?? targetFolder.appendingPathComponent("Organized")
+        let destRoot = baseDestination ?? targetFolder
         var movesByCategory: [String: [ProposedMove]] = [:]
         
         guard let enumerator = fileManager.enumerator(
@@ -37,9 +37,6 @@ public actor FolderOrganizerEngine {
             let values = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
             if values?.isDirectory == true { continue }
             
-            // Skip files already inside the destination directory to avoid recursion loops
-            if fileURL.path.hasPrefix(destRoot.path) { continue }
-            
             let ext = fileURL.pathExtension.lowercased()
             let size = Int64(values?.fileSize ?? 0)
             
@@ -48,10 +45,31 @@ public actor FolderOrganizerEngine {
             if let learned = await preferencesStore.preferredCategory(for: ext) {
                 categoryName = learned
             } else {
-                categoryName = defaultCategory(forExtension: ext, filename: fileURL.lastPathComponent)
+                categoryName = Self.defaultCategoryName(forExtension: ext, filename: fileURL.lastPathComponent)
             }
             
             let categoryDestFolder = destRoot.appendingPathComponent(categoryName)
+            
+            // Skip files already inside their destination category folder
+            let parentDir = fileURL.deletingLastPathComponent().standardizedFileURL
+            if parentDir == categoryDestFolder.standardizedFileURL || fileURL.path.hasPrefix(categoryDestFolder.path + "/") {
+                continue
+            }
+            
+            // If organizing in-place (baseDestination == nil), skip files that are already
+            // inside any recognized category subfolder under targetFolder (except old "Organized" remnants)
+            if baseDestination == nil {
+                let relativePath = fileURL.path.replacingOccurrences(of: targetFolder.path + "/", with: "")
+                let pathParts = relativePath.split(separator: "/")
+                if pathParts.count > 1 {
+                    let topFolder = String(pathParts[0])
+                    let recognizedCategories = ["Documents", "Media", "Archives", "Installers", "Development", "Other"]
+                    if recognizedCategories.contains(topFolder) {
+                        continue
+                    }
+                }
+            }
+            
             let targetURL = resolveCollisionSafeTarget(for: fileURL.lastPathComponent, in: categoryDestFolder)
             
             let move = ProposedMove(
@@ -185,7 +203,7 @@ public actor FolderOrganizerEngine {
         return target
     }
     
-    private func defaultCategory(forExtension ext: String, filename: String) -> String {
+    public static func defaultCategoryName(forExtension ext: String, filename: String) -> String {
         switch ext {
         case "pdf":
             return "Documents/PDFs"

@@ -141,15 +141,16 @@ public struct OfflineHeuristicParser: Sendable {
                 minimumSizeBytes: minSizeBytes,
                 nameContains: nil
             )
-            let destFolder = (("~/Documents/Organized" as NSString).expandingTildeInPath)
+            let destFolder = targetFolder
+            let folderName = URL(fileURLWithPath: targetFolder).lastPathComponent
             steps.append(CleaningPlanStep(
                 targetFolder: targetFolder,
                 filter: filter,
                 action: .move,
                 destinationFolder: destFolder,
-                explanation: "Sort and organize files into classified folders."
+                explanation: "Organize files directly into categorized subfolders inside \(folderName)."
             ))
-            detectedSummary = "Organize files into structured directories."
+            detectedSummary = "Organize \(folderName) into structured categories."
         } else {
             // General cleanup or large file review
             let filter = CleaningFilter(
