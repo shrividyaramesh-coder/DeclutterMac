@@ -80,6 +80,8 @@ struct MainContentView: View {
             DashboardView()
         case .cleanup:
             CleanupView()
+        case .duplicates:
+            DuplicateFinderView()
         case .history:
             HistoryView()
         default:

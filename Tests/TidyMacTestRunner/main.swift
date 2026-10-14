@@ -12,6 +12,7 @@ await runFileAccessTests()
 await runScannerTests()
 runDashboardAndCleanupTests()
 await runUndoJournalTests()
+await runDuplicateTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {
