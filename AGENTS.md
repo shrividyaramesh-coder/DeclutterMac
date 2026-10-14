@@ -1,0 +1,97 @@
+# AGENTS.md — Tidy Mac Engineering Guide & Operational Context
+
+This document outlines the architecture, coding standards, commands, and core safety invariants for **Tidy Mac**. All engineering agents and contributors must adhere to these directives.
+
+---
+
+## 1. Project Overview & Role
+
+**Tidy Mac** is a native macOS application built with Swift 6 and SwiftUI (targeting macOS 14+). It provides safe storage cleanup, duplicate file removal, app uninstallation, natural language cleanup planning, and AI folder organization.
+
+Development strictly follows **Compound Engineering**:
+- **80% Planning & Review, 20% Execution**.
+- Every bug, unexpected edge case, or critical architectural decision is recorded in `docs/solutions/` and summarized in the **Lessons Learned** section below.
+- Knowledge compounds: each completed task informs and accelerates subsequent tasks.
+
+---
+
+## 2. Core Safety Invariants (Non-Negotiable)
+
+1. **Trash-Only Deletion**:
+   - Files are moved to the user's Trash via `FileManager.default.trashItem(at:resultingItemURL:)` or security-scoped equivalents.
+   - Permanent deletion (`removeItem`, `unlink`, `rm -rf`) is **strictly forbidden** in production cleanup code.
+2. **Hard-Coded Protected Paths Denylist**:
+   - Under no circumstances can files be modified or trashed within system directories (`/System`, `/Library`, `/usr`, `/bin`, `/sbin`, `/private`, `/etc`, `/var`), the root user home directory (`~`), `.git` repositories, Apple Mail (`~/Library/Mail`), Photos libraries (`*.photoslibrary`), or system keychains.
+3. **Canonical Path & Symlink Traversal Protection**:
+   - Every file path must be canonicalized (`URL.resolvingSymlinksInPath()`) prior to evaluation.
+   - Symlinks resolving outside permitted user-managed folders must be rejected.
+   - Path-traversal sequences (`..`, hidden relative links) are caught and rejected by `PathValidator`.
+4. **Duplicate Protection**:
+   - The duplicate finder must **never** select all copies of a file within a duplicate cluster. At least one original copy must always remain unselected.
+5. **Risk Label Enforcements**:
+   - Items labeled **Manual** are strictly non-actionable in the UI and engine. They can never be checked, grouped for batch clean, or processed by cleanup routines.
+6. **Metadata-Only AI Boundary**:
+   - The AI agent (`LLMClient`) must strictly accept only `MetadataOnly` structs (file name, extension, byte size, created/modified dates, relative folder path).
+   - Under no circumstances may file contents or file data be read, buffered, or transmitted to any AI provider.
+7. **Dry-Run Confirmation**:
+   - Natural-language plans and folder organization proposals must execute in dry-run preview first. No file movements or deletions may occur without explicit user confirmation.
+8. **Undo Journaling**:
+   - Every file modification or trash operation must be recorded in the `UndoJournal` with original location, target location, timestamp, and batch ID, enabling single-click full restoration.
+
+---
+
+## 3. Build & Test Commands
+
+### Swift Package Manager (Primary & CI / CLI)
+```bash
+# Build all targets in debug mode
+swift build
+
+# Build for release
+swift build -c release
+
+# Run the complete automated test suite
+swift test
+
+# Run tests with parallel execution and verbose output
+swift test --parallel -v
+
+# Run a specific test suite (e.g. SafetyTests)
+swift test --filter SafetyTests
+```
+
+### Xcode / xcodebuild (When Xcode.app is active)
+```bash
+# Build TidyMac macOS App Target
+xcodebuild -scheme TidyMac -configuration Debug build
+
+# Run Xcode Tests
+xcodebuild test -scheme TidyMac -destination 'platform=macOS'
+```
+
+---
+
+## 4. Coding Conventions & Standards
+
+- **Language & Runtime**: Swift 6, macOS 14.0+ SDK (`@available(macOS 14.0, *)`).
+- **Concurrency**: Strict Swift 6 Concurrency (`-strict-concurrency=complete`). Use `actor` for shared mutable state (e.g., `UndoJournal`, `StorageScanner`, `FileAccessService`), and `@MainActor` for ViewModels and UI state.
+- **Safety First**: Zero force unwraps (`!`) in production code. Handle all `nil` and errors via typed `Result` or `throws`.
+- **Localization**: No hard-coded user-facing strings. All strings use `LocalizedStringResource` or String Catalogs with support for 8 languages: English (`en`), French (`fr`), German (`de`), Japanese (`ja`), Korean (`ko`), Simplified Chinese (`zh-Hans`), Traditional Chinese (`zh-Hant`), Spanish (`es`).
+- **Testing**: Every engine module must have accompanying tests in `Tests/TidyMacTests/`. Temp-directory fixtures must be used for file operations; never touch actual user directories during test execution.
+
+---
+
+## 5. Knowledge Store & Compounding
+
+Documented solutions and architectural insights are preserved under `docs/solutions/`:
+- `docs/solutions/`: Documented solutions to past problems (bugs, edge cases, best practices, workflow patterns), organized by category with YAML frontmatter (`module`, `tags`, `problem_type`).
+
+### Standing Compounding Directive
+At the conclusion of each work unit or whenever a non-obvious bug or edge case is resolved, capture the learning into a note under `docs/solutions/<topic>.md` and add a one-line summary rule to the **Lessons Learned** section below.
+
+---
+
+## 6. Lessons Learned
+
+<!-- New entries are appended below as tasks and solutions compound -->
+*(To be populated as features and solutions are completed)*

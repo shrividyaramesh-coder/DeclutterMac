@@ -1,0 +1,22 @@
+# Xcode & Swift
+.build/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+.swiftpm/configuration/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Compound Engineering
+.compound-engineering/*.local.yaml
+.context/compound-engineering/
+
+# User & Local
+*.local
+.env
