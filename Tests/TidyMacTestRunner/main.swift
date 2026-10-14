@@ -19,6 +19,7 @@ await runOrganizerTests()
 await runRuleEngineTests()
 await runEndToEndFixtureTests()
 runLaunchAgentAndAppPolishTests()
+await runComprehensiveEdgeCaseTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {
