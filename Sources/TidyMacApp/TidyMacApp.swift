@@ -88,6 +88,8 @@ struct MainContentView: View {
             AgentChatView()
         case .organize:
             FolderOrganizerView()
+        case .rules:
+            RulesManagementView()
         case .history:
             HistoryView()
         default:

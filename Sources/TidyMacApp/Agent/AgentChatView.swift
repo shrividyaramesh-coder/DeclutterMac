@@ -385,16 +385,15 @@ public struct AgentChatView: View {
                         if count > 200 { break }
                         let values = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
                         let size = Int64(values?.fileSize ?? 0)
-                        let modDate = values?.contentModificationDate ?? Date()
-                        let category = CategoryClassifier.classify(url: fileURL)
-                        let risk = RiskEvaluator.evaluate(url: fileURL, category: category, fileSize: size, lastModifiedDate: modDate)
+                        let category = CategoryClassifier.classify(url: fileURL, fileSize: size, createdDate: modDate)
+                        let risk = RiskEvaluator.evaluateRisk(category: category, url: fileURL, fileSize: size, createdDate: modDate)
                         
                         candidateItems.append(FileItem(
                             url: fileURL,
                             fileSize: size,
+                            lastModifiedDate: modDate,
                             category: category,
-                            riskLabel: risk,
-                            lastModifiedDate: modDate
+                            riskLabel: risk
                         ))
                     }
                 }
