@@ -80,6 +80,8 @@ struct MainContentView: View {
             DashboardView()
         case .cleanup:
             CleanupView()
+        case .history:
+            HistoryView()
         default:
             VStack(spacing: 20) {
                 Image(systemName: item.systemImage)

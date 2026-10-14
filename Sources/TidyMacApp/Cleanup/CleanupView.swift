@@ -194,14 +194,25 @@ public struct CleanupView: View {
 
         Task {
             let toClean = selectedItems
+            let runId = UUID()
             var trashedBytes: Int64 = 0
             var trashedCount = 0
 
             for item in toClean {
                 do {
-                    _ = try await TrashMover.shared.moveToTrash(at: item.url)
+                    let trashedURL = try await TrashMover.shared.moveToTrash(at: item.url)
                     trashedBytes += item.fileSize
                     trashedCount += 1
+
+                    let entry = JournalEntry(
+                        runId: runId,
+                        timestamp: Date(),
+                        originalURL: item.url,
+                        trashedURL: trashedURL,
+                        fileSize: item.fileSize,
+                        action: .trashed
+                    )
+                    await UndoJournal.shared.record(entry: entry)
                 } catch {
                     print("Failed to trash \(item.url.path): \(error)")
                 }
