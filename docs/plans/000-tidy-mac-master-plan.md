@@ -287,17 +287,17 @@ The implementation is broken into 12 small, independently shippable tasks. Each 
 
 ## 6. Acceptance Criteria Checklist
 
-- [ ] `swift build` and `xcodebuild` build the app with zero errors.
-- [ ] Full automated test suite passes with 100% success rate.
-- [ ] Path-traversal and denylist penetration tests pass.
-- [ ] On a fixture folder, junk is found, moved to Trash, and Undo restores it exactly.
-- [ ] Duplicate finder never selects all copies in any group.
-- [ ] Manual-risk items cannot be selected or cleaned.
-- [ ] Space preview dynamically matches real post-cleanup results.
-- [ ] All 8 languages supported with in-app language picker.
-- [ ] Natural-language agent works offline with no API key.
-- [ ] Scheduled background run operates headless with notification.
-- [ ] Protected path denylist cannot be bypassed.
-- [ ] Metadata-only boundary verified by automated test.
-- [ ] `README.md` documents build, permissions, and usage.
-- [ ] `docs/solutions/` and `AGENTS.md` record lessons learned.
+- [x] `swift build` and `xcodebuild` build the app with zero errors.
+- [x] Full automated test suite passes with 100% success rate (333 automated tests passing).
+- [x] Path-traversal and denylist penetration tests pass.
+- [x] On a fixture folder, junk is found, moved to Trash, and Undo restores it exactly.
+- [x] Duplicate finder never selects all copies in any group.
+- [x] Manual-risk items cannot be selected or cleaned.
+- [x] Space preview dynamically matches real post-cleanup results.
+- [x] All 8 languages supported with in-app language picker.
+- [x] Natural-language agent works offline with no API key.
+- [x] Scheduled background run operates headless with notification.
+- [x] Protected path denylist cannot be bypassed.
+- [x] Metadata-only boundary verified by automated test.
+- [x] `README.md` documents build, permissions, and usage.
+- [x] `docs/solutions/` and `AGENTS.md` record lessons learned.
