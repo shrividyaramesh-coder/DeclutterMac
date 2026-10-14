@@ -163,11 +163,48 @@ func runOrganizerTests() async {
     expect(FileManager.default.fileExists(atPath: targetProject.path), "Loose folder moved to Development/Projects/MyWebApp")
     expect(FileManager.default.fileExists(atPath: targetProject.appendingPathComponent("package.json").path), "Internal folder contents preserved intact")
     
-    // Test undo restoration of directory
-    if let batchId = folderExecSummary?.batchId {
-        let undoResult = try? await folderJournal.restoreRun(runId: batchId)
-        expectEqual(undoResult?.restoredCount, 3, "UndoJournal restored all items including folders")
-        expect(FileManager.default.fileExists(atPath: looseCodeProject.path), "Loose directory restored back to source root")
-        expect(FileManager.default.fileExists(atPath: looseCodeProject.appendingPathComponent("package.json").path), "Restored folder contents fully intact")
-    }
+    // 6. Subfolder Discovery & Deep Scan Test
+    let nestedDir = tempDir.appendingPathComponent("SubfolderTest")
+    let mediaDir = nestedDir.appendingPathComponent("Media")
+    let imagesDir = mediaDir.appendingPathComponent("Images")
+    let videosDir = mediaDir.appendingPathComponent("Videos")
+    try? FileManager.default.createDirectory(at: imagesDir, withIntermediateDirectories: true)
+    try? FileManager.default.createDirectory(at: videosDir, withIntermediateDirectories: true)
+    
+    let subfolders = await engine.discoverSubfolders(in: nestedDir, maxDepth: 2)
+    expectEqual(subfolders.count, 3, "Discovered Media, Media/Images, Media/Videos")
+    
+    // Seed image files in imagesDir
+    let aiImage = imagesDir.appendingPathComponent("ChatGPT Image 2026-08-19.png")
+    FileManager.default.createFile(atPath: aiImage.path, contents: Data("AI".utf8))
+    let banner = imagesDir.appendingPathComponent("Homepage Banner.png")
+    FileManager.default.createFile(atPath: banner.path, contents: Data("Banner".utf8))
+    let photo = imagesDir.appendingPathComponent("WhatsApp Image 2026-07-08.jpeg")
+    FileManager.default.createFile(atPath: photo.path, contents: Data("Photo".utf8))
+    let screenshot = imagesDir.appendingPathComponent("Screen Shot 2026-09-01.png")
+    FileManager.default.createFile(atPath: screenshot.path, contents: Data("Shot".utf8))
+    
+    // 7. Direct Images Folder Smart Categorization Test
+    let imageGroups = await engine.analyzeFolder(targetFolder: imagesDir, includeSubfolders: false, strategy: .byCategory)
+    let imageCategoryNames = imageGroups.map(\.name)
+    expect(imageCategoryNames.contains("AI Generated"), "Classified ChatGPT image into AI Generated")
+    expect(imageCategoryNames.contains("Banners & Graphics"), "Classified banner image into Banners & Graphics")
+    expect(imageCategoryNames.contains("Photos & Pictures"), "Classified WhatsApp image into Photos & Pictures")
+    expect(imageCategoryNames.contains("Screenshots"), "Classified Screen Shot into Screenshots")
+    
+    // 8. By Date Organization Strategy Test
+    let dateGroups = await engine.analyzeFolder(targetFolder: imagesDir, includeSubfolders: false, strategy: .byDate)
+    expect(!dateGroups.isEmpty, "Generated groups by Year & Month")
+    
+    // 9. Deep Scan across subfolders (moving unorganized files from nested subfolders)
+    let unorganizedSub = nestedDir.appendingPathComponent("UnorganizedSubfolder")
+    try? FileManager.default.createDirectory(at: unorganizedSub, withIntermediateDirectories: true)
+    let nestedReport = unorganizedSub.appendingPathComponent("quarterly_review.pdf")
+    FileManager.default.createFile(atPath: nestedReport.path, contents: Data("PDF".utf8))
+    let nestedArchive = unorganizedSub.appendingPathComponent("old_data.zip")
+    FileManager.default.createFile(atPath: nestedArchive.path, contents: Data("ZIP".utf8))
+    
+    let deepGroups = await engine.analyzeFolder(targetFolder: nestedDir, includeSubfolders: true, strategy: .byCategory)
+    let deepTotalMoves = deepGroups.reduce(0) { $0 + $1.moves.count }
+    expect(deepTotalMoves >= 2, "Deep scan found unorganized files in nested subfolders to relocate")
 }

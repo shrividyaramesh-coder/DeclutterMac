@@ -1,5 +1,14 @@
 import Foundation
 
+/// Strategy used to classify files during folder organization.
+public enum OrganizationStrategy: String, Sendable, Codable, CaseIterable, Identifiable {
+    case byCategory = "Smart Categories"
+    case byDate = "By Date (Year & Month)"
+    case byType = "By File Type"
+    
+    public var id: String { rawValue }
+}
+
 /// Proposed file relocation item.
 public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
     public let id: UUID
@@ -9,6 +18,7 @@ public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
     public let fileSize: Int64
     public var isSelected: Bool
     public var isDirectory: Bool
+    public var sourceRelativePath: String
     
     public init(
         id: UUID = UUID(),
@@ -17,7 +27,8 @@ public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
         categoryName: String,
         fileSize: Int64,
         isSelected: Bool = true,
-        isDirectory: Bool = false
+        isDirectory: Bool = false,
+        sourceRelativePath: String = ""
     ) {
         self.id = id
         self.originalURL = originalURL
@@ -26,6 +37,7 @@ public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
         self.fileSize = fileSize
         self.isSelected = isSelected
         self.isDirectory = isDirectory
+        self.sourceRelativePath = sourceRelativePath
     }
     
     public var formattedSize: String {

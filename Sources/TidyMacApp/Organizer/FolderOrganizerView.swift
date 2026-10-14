@@ -1,16 +1,29 @@
 import SwiftUI
 import TidyMacCore
+import AppKit
+
+public enum SubfolderOption: Hashable {
+    case deepScan
+    case topLevelOnly
+    case specific(URL)
+}
 
 public struct FolderOrganizerView: View {
     @ObservedObject private var localization = LocalizationManager.shared
     
     @State private var selectedFolder: URL? = nil
     @State private var availableFolders: [URL] = []
+    @State private var discoveredSubfolders: [URL] = []
+    @State private var selectedSubfolderOption: SubfolderOption = .deepScan
+    @State private var strategy: OrganizationStrategy = .byCategory
+    
     @State private var isAnalyzing: Bool = false
     @State private var categoryGroups: [OrganizationCategoryGroup] = []
+    @State private var selectedCategoryFilter: String? = nil
     @State private var executionSummary: PlanExecutionSummary? = nil
     @State private var errorMessage: String? = nil
     @State private var collapsedGroupIndices: Set<Int> = []
+    
     @State private var folderSortsUsed: Int = 0
     @State private var isLifetimeUnlocked: Bool = false
     @State private var showPaywallSheet: Bool = false
@@ -61,12 +74,27 @@ public struct FolderOrganizerView: View {
             if selectedFolder == nil {
                 selectedFolder = folders.first(where: { $0.lastPathComponent == "Downloads" }) ?? folders.first
             }
+            if let root = selectedFolder {
+                await loadSubfolders(for: root)
+            }
             if categoryGroups.isEmpty && selectedFolder != nil {
-                analyzeSelectedFolder()
+                analyzeActiveFolder()
             }
         }
-        .onChange(of: selectedFolder) { _, _ in
-            analyzeSelectedFolder()
+        .onChange(of: selectedFolder) { _, newFolder in
+            if let folder = newFolder {
+                Task {
+                    await loadSubfolders(for: folder)
+                    selectedSubfolderOption = .deepScan
+                    analyzeActiveFolder()
+                }
+            }
+        }
+        .onChange(of: selectedSubfolderOption) { _, _ in
+            analyzeActiveFolder()
+        }
+        .onChange(of: strategy) { _, _ in
+            analyzeActiveFolder()
         }
     }
     
@@ -83,7 +111,7 @@ public struct FolderOrganizerView: View {
                         .font(.title2)
                         .fontWeight(.bold)
                 }
-                Text("Smart folder structuring with collision-safe moves and full undo.")
+                Text("Smart folder structuring with collision-safe moves, subfolder navigation, and full undo.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -134,38 +162,139 @@ public struct FolderOrganizerView: View {
     }
     
     private var folderSelectionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Select folder to organize:")
-                .font(.headline)
-            
+        VStack(alignment: .leading, spacing: 14) {
+            // Row 1: Target Folder, Subfolder Drill-down, and Custom Browser
             HStack(spacing: 12) {
-                Picker("", selection: $selectedFolder) {
-                    ForEach(availableFolders, id: \.self) { folder in
-                        Text(folder.lastPathComponent).tag(Optional(folder))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Folder:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Picker("", selection: $selectedFolder) {
+                        ForEach(availableFolders, id: \.self) { folder in
+                            Text(folder.lastPathComponent).tag(Optional(folder))
+                        }
                     }
+                    .pickerStyle(.menu)
+                    .frame(width: 160)
                 }
-                .pickerStyle(.menu)
-                .frame(width: 200)
                 
-                Button(action: analyzeSelectedFolder) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "wand.and.stars")
-                        Text("Analyze & Propose Structure")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Scope / Subfolder:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Picker("", selection: $selectedSubfolderOption) {
+                        Text("All Subfolders (Deep Scan)").tag(SubfolderOption.deepScan)
+                        Text("Root Only (Direct Files)").tag(SubfolderOption.topLevelOnly)
+                        
+                        if !discoveredSubfolders.isEmpty {
+                            Divider()
+                            ForEach(discoveredSubfolders, id: \.self) { sf in
+                                let rel = relativeSubfolderPath(for: sf)
+                                Text("📂 \(rel)").tag(SubfolderOption.specific(sf))
+                            }
+                        }
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
+                    .pickerStyle(.menu)
+                    .frame(width: 250)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(selectedFolder == nil || isAnalyzing)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(" ").font(.caption)
+                    Button(action: pickCustomFolder) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "folder.badge.plus")
+                            Text("Browse...")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .help("Choose any custom folder or subfolder on your Mac")
+                }
+                
+                if let activeURL = activeTargetFolder {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(" ").font(.caption)
+                        Button(action: {
+                            NSWorkspace.shared.activateFileViewerSelecting([activeURL])
+                        }) {
+                            Image(systemName: "arrow.up.forward.app")
+                        }
+                        .buttonStyle(.bordered)
+                        .help("Reveal selected folder in Finder")
+                    }
+                }
+                
+                Spacer()
+            }
+            
+            // Row 2: Organization Strategy & Analyze Action
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Organization Strategy:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Picker("", selection: $strategy) {
+                        ForEach(OrganizationStrategy.allCases) { strat in
+                            Text(strat.rawValue).tag(strat)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 380)
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(" ").font(.caption)
+                    Button(action: analyzeActiveFolder) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "wand.and.stars")
+                            Text("Analyze & Propose Structure")
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 5)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(activeTargetFolder == nil || isAnalyzing)
+                }
+                
+                Spacer()
+            }
+            
+            // Active Target Path Display Badge
+            if let activeURL = activeTargetFolder {
+                HStack(spacing: 6) {
+                    Image(systemName: isDirectSubfolderSelected ? "folder.fill.badge.gearshape" : "folder.fill")
+                        .foregroundColor(.accentColor)
+                        .font(.caption)
+                    Text("Target Path: \(activeURL.path)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    
+                    if isDeepScanMode {
+                        Text("• Deep Scan (Includes all subfolders)")
+                            .font(.caption2)
+                            .foregroundColor(.accentColor)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.8))
+                .cornerRadius(6)
             }
         }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(12)
     }
     
     private var analyzingIndicator: some View {
         HStack(spacing: 12) {
             ProgressView()
                 .controlSize(.small)
-            Text("Analyzing files and generating taxonomy...")
+            Text("Analyzing files and generating smart category taxonomy...")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -173,16 +302,31 @@ public struct FolderOrganizerView: View {
     }
     
     private func errorBanner(_ message: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.red)
-            Text(message)
-                .font(.subheadline)
-                .foregroundColor(.red)
-            Spacer()
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundColor(.accentColor)
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            
+            if !isDeepScanMode {
+                Button(action: {
+                    selectedSubfolderOption = .deepScan
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "magnifyingglass")
+                        Text("Scan All Subfolders (Deep Scan)")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+            }
         }
         .padding(12)
-        .background(Color.red.opacity(0.1))
+        .background(Color.accentColor.opacity(0.08))
         .cornerRadius(8)
     }
     
@@ -193,7 +337,7 @@ public struct FolderOrganizerView: View {
                 .foregroundColor(.accentColor)
             Text("Ready to Organize")
                 .font(.headline)
-            Text("Click **Analyze & Propose Structure** above to inspect loose files and folders in your selected folder and preview smart category groupings.")
+            Text("Click **Analyze & Propose Structure** above to inspect loose files and subfolders in your selected folder and preview smart category groupings.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -207,6 +351,7 @@ public struct FolderOrganizerView: View {
     
     private var proposalsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Proposals Header
             HStack {
                 Text("Proposed Folder Structure (\(totalMovesCount) items)")
                     .font(.headline)
@@ -227,7 +372,11 @@ public struct FolderOrganizerView: View {
                     .foregroundColor(.accentColor)
             }
             
-            ForEach(categoryGroups.indices, id: \.self) { index in
+            // Category Filter Bar & Quick Select
+            categoryFilterBar
+            
+            // Category Group Cards
+            ForEach(filteredCategoryGroupIndices, id: \.self) { index in
                 categoryGroupCard(index: index)
             }
             
@@ -236,6 +385,7 @@ public struct FolderOrganizerView: View {
                 Button(action: {
                     categoryGroups = []
                     collapsedGroupIndices.removeAll()
+                    selectedCategoryFilter = nil
                 }) {
                     Text("Discard Proposal")
                         .padding(.horizontal, 16)
@@ -248,13 +398,13 @@ public struct FolderOrganizerView: View {
                 Button(action: applyOrganization) {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.right.doc.on.clipboard")
-                        Text("Apply Organization Moves")
+                        Text("Apply Organization Moves (\(selectedItemsCount))")
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 8)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(totalSelectedSize == 0)
+                .disabled(selectedItemsCount == 0)
             }
             .padding(.top, 12)
         }
@@ -263,8 +413,85 @@ public struct FolderOrganizerView: View {
         .cornerRadius(12)
     }
     
+    private var categoryFilterBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    filterPill(title: "All", count: totalMovesCount, isSelected: selectedCategoryFilter == nil) {
+                        selectedCategoryFilter = nil
+                    }
+                    
+                    ForEach(categoryGroups) { group in
+                        filterPill(title: group.name, count: group.moves.count, isSelected: selectedCategoryFilter == group.name) {
+                            selectedCategoryFilter = group.name
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            
+            HStack(spacing: 10) {
+                if let filter = selectedCategoryFilter {
+                    Button(action: {
+                        selectOnlyCategory(named: filter)
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("Select Only \"\(filter)\"")
+                        }
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                }
+                
+                Button(action: selectAllItems) {
+                    Text("Select All")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                
+                Button(action: deselectAllItems) {
+                    Text("Deselect All")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                
+                Spacer()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private func filterPill(title: String, count: Int, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.caption)
+                    .fontWeight(isSelected ? .bold : .medium)
+                Text("\(count)")
+                    .font(.caption2)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(isSelected ? Color.white.opacity(0.3) : Color.secondary.opacity(0.15))
+                    .cornerRadius(6)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(isSelected ? Color.accentColor : Color(NSColor.windowBackgroundColor))
+            .foregroundColor(isSelected ? .white : .primary)
+            .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+    }
+    
     private func categoryGroupCard(index: Int) -> some View {
         let isCollapsed = collapsedGroupIndices.contains(index)
+        let group = categoryGroups[index]
+        let allSelectedInGroup = group.moves.allSatisfy(\.isSelected)
         
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
@@ -282,6 +509,17 @@ public struct FolderOrganizerView: View {
                 }
                 .buttonStyle(.plain)
                 
+                // Group Select Toggle
+                Toggle("", isOn: Binding(
+                    get: { allSelectedInGroup },
+                    set: { newVal in
+                        for mIndex in categoryGroups[index].moves.indices {
+                            categoryGroups[index].moves[mIndex].isSelected = newVal
+                        }
+                    }
+                ))
+                .labelsHidden()
+                
                 Image(systemName: "folder.fill")
                     .foregroundColor(.accentColor)
                 
@@ -289,7 +527,7 @@ public struct FolderOrganizerView: View {
                 TextField("Category Name", text: Binding(
                     get: { categoryGroups[index].name },
                     set: { newName in
-                        guard let folder = selectedFolder else { return }
+                        guard let folder = activeTargetFolder else { return }
                         let destRoot = folder
                         Task {
                             let updated = await FolderOrganizerEngine.shared.updateCategory(
@@ -309,7 +547,7 @@ public struct FolderOrganizerView: View {
                 
                 Spacer()
                 
-                Text("\(categoryGroups[index].moves.count) items • \(categoryGroups[index].formattedTotalSize)")
+                Text("\(group.moves.count) items • \(group.formattedTotalSize)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -318,7 +556,7 @@ public struct FolderOrganizerView: View {
                 Divider()
                 
                 LazyVStack(spacing: 6) {
-                    ForEach(categoryGroups[index].moves.indices, id: \.self) { moveIndex in
+                    ForEach(group.moves.indices, id: \.self) { moveIndex in
                         moveRow(groupIndex: index, moveIndex: moveIndex)
                     }
                 }
@@ -360,11 +598,21 @@ public struct FolderOrganizerView: View {
                     }
                 }
                 
-                Text("→ \(move.targetURL.path)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                HStack(spacing: 4) {
+                    if !move.sourceRelativePath.isEmpty && move.sourceRelativePath != move.originalURL.lastPathComponent {
+                        Text("From: \(move.sourceRelativePath)")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("•")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    Text("→ \(move.targetURL.path)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
             }
             
             Spacer()
@@ -398,36 +646,145 @@ public struct FolderOrganizerView: View {
     
     // MARK: - Computed Properties
     
+    private var activeTargetFolder: URL? {
+        guard let root = selectedFolder else { return nil }
+        switch selectedSubfolderOption {
+        case .deepScan, .topLevelOnly:
+            return root
+        case .specific(let url):
+            return url
+        }
+    }
+    
+    private var isDeepScanMode: Bool {
+        if case .deepScan = selectedSubfolderOption {
+            return true
+        }
+        return false
+    }
+    
+    private var isDirectSubfolderSelected: Bool {
+        if case .specific = selectedSubfolderOption {
+            return true
+        }
+        return false
+    }
+    
+    private var filteredCategoryGroupIndices: [Int] {
+        if let filter = selectedCategoryFilter {
+            return categoryGroups.indices.filter { categoryGroups[$0].name == filter }
+        }
+        return Array(categoryGroups.indices)
+    }
+    
     private var totalMovesCount: Int {
         categoryGroups.reduce(0) { $0 + $1.moves.count }
+    }
+    
+    private var selectedItemsCount: Int {
+        categoryGroups.flatMap(\.moves).filter(\.isSelected).count
     }
     
     private var totalSelectedSize: Int64 {
         categoryGroups.reduce(0) { $0 + $1.totalSize }
     }
     
+    private func relativeSubfolderPath(for url: URL) -> String {
+        guard let root = selectedFolder else { return url.lastPathComponent }
+        let rel = url.path.replacingOccurrences(of: root.path + "/", with: "")
+        return rel.isEmpty ? url.lastPathComponent : rel
+    }
+    
     // MARK: - Actions
     
-    private func analyzeSelectedFolder() {
-        guard let folder = selectedFolder else { return }
+    private func loadSubfolders(for folder: URL) async {
+        let subs = await FolderOrganizerEngine.shared.discoverSubfolders(in: folder, maxDepth: 2)
+        await MainActor.run {
+            self.discoveredSubfolders = subs
+        }
+    }
+    
+    private func pickCustomFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.prompt = "Select Folder to Organize"
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            let canonical = url.resolvingSymlinksInPath()
+            Task {
+                _ = try? await FileAccessService.shared.saveBookmark(for: canonical)
+                await MainActor.run {
+                    if !availableFolders.contains(canonical) {
+                        availableFolders.append(canonical)
+                    }
+                    selectedFolder = canonical
+                    selectedSubfolderOption = .deepScan
+                }
+                await loadSubfolders(for: canonical)
+                analyzeActiveFolder()
+            }
+        }
+    }
+    
+    private func analyzeActiveFolder() {
+        guard let target = activeTargetFolder else { return }
         isAnalyzing = true
         errorMessage = nil
         executionSummary = nil
+        selectedCategoryFilter = nil
+        
+        let includeSubs = isDeepScanMode
+        let chosenStrategy = strategy
         
         Task {
-            let groups = await FolderOrganizerEngine.shared.analyzeFolder(targetFolder: folder)
+            let groups = await FolderOrganizerEngine.shared.analyzeFolder(
+                targetFolder: target,
+                includeSubfolders: includeSubs,
+                strategy: chosenStrategy
+            )
             await MainActor.run {
                 self.categoryGroups = groups
                 self.isAnalyzing = false
                 if groups.isEmpty {
-                    self.errorMessage = "No loose files found in '\(folder.lastPathComponent)' to organize."
+                    if includeSubs {
+                        self.errorMessage = "No files found in '\(target.lastPathComponent)' that need relocation."
+                    } else {
+                        self.errorMessage = "No loose files found in '\(target.lastPathComponent)' at the top level. Try switching to 'All Subfolders (Deep Scan)' or selecting a subfolder above."
+                    }
                 }
             }
         }
     }
     
+    private func selectOnlyCategory(named categoryName: String) {
+        for gIndex in categoryGroups.indices {
+            let isTarget = categoryGroups[gIndex].name == categoryName
+            for mIndex in categoryGroups[gIndex].moves.indices {
+                categoryGroups[gIndex].moves[mIndex].isSelected = isTarget
+            }
+        }
+    }
+    
+    private func selectAllItems() {
+        for gIndex in categoryGroups.indices {
+            for mIndex in categoryGroups[gIndex].moves.indices {
+                categoryGroups[gIndex].moves[mIndex].isSelected = true
+            }
+        }
+    }
+    
+    private func deselectAllItems() {
+        for gIndex in categoryGroups.indices {
+            for mIndex in categoryGroups[gIndex].moves.indices {
+                categoryGroups[gIndex].moves[mIndex].isSelected = false
+            }
+        }
+    }
+    
     private func applyOrganization() {
-        guard !categoryGroups.isEmpty, let folder = selectedFolder else { return }
+        guard !categoryGroups.isEmpty, let target = activeTargetFolder, let root = selectedFolder else { return }
         
         Task {
             let canSort = await LocalLicenseProvider.shared.canSortFolder()
@@ -442,7 +799,7 @@ public struct FolderOrganizerView: View {
                 let summary = try await FolderOrganizerEngine.shared.applyMoves(
                     groups: categoryGroups,
                     journal: UndoJournal.shared,
-                    allowedRoots: [folder]
+                    allowedRoots: [root, target]
                 )
                 
                 await LocalLicenseProvider.shared.recordFolderSort()
@@ -451,7 +808,11 @@ public struct FolderOrganizerView: View {
                 await MainActor.run {
                     self.executionSummary = summary
                     self.categoryGroups = []
+                    self.selectedCategoryFilter = nil
                 }
+                
+                // Refresh subfolders list
+                await loadSubfolders(for: root)
             } catch {
                 await MainActor.run {
                     self.errorMessage = error.localizedDescription
