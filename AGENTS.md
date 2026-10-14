@@ -95,3 +95,4 @@ At the conclusion of each work unit or whenever a non-obvious bug or edge case i
 
 - **Concurrency & Global Utilities**: Cross-cutting utilities (such as `localized()`) must use a thread-safe Sendable store (e.g. `os_unfair_lock`) rather than pure `@MainActor` so non-isolated model properties can access them synchronously without async hops.
 - **CLI Test Reliability**: Standalone `CommandLineTools` lacks `XCTest.framework`; executable test targets like `TidyMacTestRunner` provide deterministic, zero-dependency CI test validation on any macOS machine.
+- **Denylist Scoping vs macOS Temp Paths**: `/var/folders` (`/private/var/folders`) hosts macOS per-user temporary directories; rather than a blanket `/var` ban, gate per-user temp access strictly to directories explicitly authorized in `allowedRoots`.
