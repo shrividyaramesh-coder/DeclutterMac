@@ -13,6 +13,7 @@ await runScannerTests()
 runDashboardAndCleanupTests()
 await runUndoJournalTests()
 await runDuplicateTests()
+await runUninstallerTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {

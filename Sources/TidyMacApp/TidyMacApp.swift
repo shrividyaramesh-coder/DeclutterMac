@@ -82,6 +82,8 @@ struct MainContentView: View {
             CleanupView()
         case .duplicates:
             DuplicateFinderView()
+        case .apps:
+            AppUninstallerView()
         case .history:
             HistoryView()
         default:
