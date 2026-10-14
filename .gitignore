@@ -21,3 +21,5 @@ Icon
 # User & Local
 *.local
 .env
+web/*.dmg
+web/*.zip

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tidy Mac — Declutter your Mac with zero effort</title>
+  <link rel="icon" type="image/png" href="app-icon.png">
+  <style>
+    :root {
+      --primary: #0A84FF;
+      --primary-hover: #0071E3;
+      --primary-glow: rgba(10, 132, 255, 0.25);
+      --bg: #0A0D14;
+      --card-bg: rgba(22, 27, 34, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-hover-border: rgba(10, 132, 255, 0.4);
+      --text: #F0F6FC;
+      --text-muted: #8B949E;
+      --success: #30D158;
+      --warning: #FF9F0A;
+      --code-bg: #11151C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glow */
+    .glow-ambient {
+      position: absolute;
+      top: -150px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(10, 132, 255, 0.15) 0%, rgba(48, 209, 88, 0.05) 50%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Header Nav */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(10, 13, 20, 0.8);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .nav-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .btn-nav {
+      background: var(--primary);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-nav:hover {
+      background: var(--primary-hover);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    /* Hero Section */
+    .hero {
+      position: relative;
+      max-width: 900px;
+      margin: 60px auto 40px;
+      padding: 0 24px;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(10, 132, 255, 0.12);
+      border: 1px solid rgba(10, 132, 255, 0.25);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #58A6FF;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .app-icon-large {
+      width: 110px;
+      height: 110px;
+      border-radius: 26px;
+      margin-bottom: 24px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 40px var(--primary-glow);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    h1 {
+      font-size: 3.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #A5B4FC 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 36px;
+      font-weight: 400;
+    }
+
+    /* Download Actions */
+    .download-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .btn-download-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 28px;
+      background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 8px 24px var(--primary-glow);
+      transition: all 0.25s ease;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-download-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(10, 132, 255, 0.45);
+      background: linear-gradient(135deg, #2A93FF 0%, #0A84FF 100%);
+    }
+
+    .btn-download-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 22px;
+      background: var(--card-bg);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      text-decoration: none;
+      border: 1px solid var(--card-border);
+      transition: all 0.25s ease;
+    }
+
+    .btn-download-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .meta-spec {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .meta-spec span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Terminal Quick Install */
+    .terminal-box {
+      max-width: 600px;
+      margin: 32px auto 0;
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .terminal-box code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      color: #7EE787;
+      word-break: break-all;
+      text-align: left;
+    }
+
+    .btn-copy {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    /* Features Grid */
+    .section-title {
+      text-align: center;
+      margin: 90px auto 16px;
+      max-width: 700px;
+      padding: 0 24px;
+    }
+
+    .section-title h2 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .features-grid {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .feature-card:hover {
+      border-color: var(--card-hover-border);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      margin-bottom: 14px;
+      display: inline-block;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .feature-card h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Safety Guarantee Banner */
+    .safety-banner {
+      max-width: 1050px;
+      margin: 40px auto;
+      padding: 32px;
+      background: linear-gradient(135deg, rgba(48, 209, 88, 0.1) 0%, rgba(10, 132, 255, 0.08) 100%);
+      border: 1px solid rgba(48, 209, 88, 0.25);
+      border-radius: 16px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .safety-badge-icon {
+      font-size: 3rem;
+    }
+
+    .safety-banner h3 {
+      font-size: 1.35rem;
+      margin-bottom: 8px;
+      color: #7EE787;
+    }
+
+    .safety-banner p {
+      color: #C9D1D9;
+      font-size: 0.96rem;
+      margin-bottom: 12px;
+    }
+
+    .safety-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .safety-tag {
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #A5D6FF;
+    }
+
+    /* Installation Steps */
+    .install-section {
+      max-width: 850px;
+      margin: 60px auto;
+      padding: 0 24px;
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-content h4 {
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+
+    .step-content p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 80px;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      h1 { font-size: 2.3rem; }
+      .safety-banner { grid-template-columns: 1fr; text-align: center; }
+      .safety-tags { justify-content: center; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-ambient"></div>
+
+  <!-- Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <img src="app-icon.png" alt="Tidy Mac Icon" class="brand-icon">
+        <span>Tidy Mac</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#safety">Safety</a></li>
+        <li><a href="#install">Installation</a></li>
+        <li><a href="TidyMac.dmg" class="btn-nav">Download DMG</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main>
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="pulse"></span>
+        <span>Version 1.0.0 Now Available • Native Swift 6</span>
+      </div>
+      <br>
+      <img src="app-icon.png" alt="Tidy Mac" class="app-icon-large">
+      <h1>Declutter your Mac<br>with zero effort.</h1>
+      <p class="hero-subtitle">
+        Intelligent, lightning-fast storage cleanup, duplicate removal, app uninstallation, and folder organization with 100% Trash-only deletion and full undo.
+      </p>
+
+      <div class="download-group">
+        <a href="TidyMac.dmg" download class="btn-download-primary">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download for macOS (.dmg)
+        </a>
+
+        <a href="TidyMac.zip" download class="btn-download-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          Download .ZIP (1.7 MB)
+        </a>
+      </div>
+
+      <div class="meta-spec">
+        <span> macOS 14.0+ (Sonoma, Sequoia)</span>
+        <span>•</span>
+        <span>Universal (Apple Silicon & Intel)</span>
+        <span>•</span>
+        <span>2.1 MB DMG</span>
+      </div>
+
+      <!-- Quick Install via Terminal -->
+      <div class="terminal-box">
+        <code>curl -fsSL http://localhost:8000/install.sh | bash</code>
+        <button class="btn-copy" onclick="copyInstallCmd()">Copy Command</button>
+      </div>
+    </section>
+
+    <!-- Safety Guarantee -->
+    <section class="safety-banner" id="safety">
+      <div class="safety-badge-icon">🛡️</div>
+      <div>
+        <h3>Strict Core Safety Invariants (Non-Negotiable)</h3>
+        <p>
+          Tidy Mac is engineered with safety-first principles so your important documents and system files are never compromised.
+        </p>
+        <div class="safety-tags">
+          <span class="safety-tag">✓ 100% Trash-Only Deletion (Zero permanent rm)</span>
+          <span class="safety-tag">✓ Hard-Coded Denylist (/System, Mail, Photos, .git)</span>
+          <span class="safety-tag">✓ Undo Journal (1-click full restoration)</span>
+          <span class="safety-tag">✓ Metadata-Only AI (Zero file contents read)</span>
+          <span class="safety-tag">✓ Keep-At-Least-One Duplicate Guard</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Feature Grid -->
+    <section class="section-title" id="features">
+      <h2>Engineered for Power & Simplicity</h2>
+      <p>Six specialized native tools designed to keep your Mac running lean, fast, and tidy.</p>
+    </section>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">✨</div>
+        <h3>One-Click Smart Cleanup</h3>
+        <p>Discovers caches, system logs, old downloads, and installer DMGs. Clear Safe, Review, and Manual risk labels ensure you are always in control.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📂</div>
+        <h3>Folder Organizer</h3>
+        <p>Organizes loose files and project directories directly in-place into Documents, Media, Projects, and Archives with numbered collision prevention.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>3-Tier Duplicate Finder</h3>
+        <p>Size &rarr; Partial Hash &rarr; Full SHA-256 detection guarantees zero false positives while always preserving at least one original copy.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🗑️</div>
+        <h3>App Leftover Uninstaller</h3>
+        <p>Locates hidden remnants across Application Support, Caches, Preferences, and Containers to ensure clean, thorough uninstalls.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Natural Language Agent</h3>
+        <p>Ask in plain English ("clear screenshots older than 30 days"). The planner generates dry-run previews before any file is moved.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">⏰</div>
+        <h3>Continuous Schedule</h3>
+        <p>Set-and-forget daily, weekly, or low-disk-space background routines powered by Apple's native LaunchAgent daemon.</p>
+      </div>
+    </div>
+
+    <!-- Installation Steps -->
+    <section class="section-title" id="install">
+      <h2>Getting Started in Seconds</h2>
+      <p>How to install and run Tidy Mac on your local machine.</p>
+    </section>
+
+    <div class="install-section">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Download the DMG or ZIP</h4>
+          <p>Click the download button above to get <code>TidyMac.dmg</code> or <code>TidyMac.zip</code>, or run the terminal install command.</p>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Drag to Applications</h4>
+          <p>Open the disk image and drag <code>TidyMac.app</code> into your <code>Applications</code> folder.</p>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Launch & Grant Permissions</h4>
+          <p>Launch Tidy Mac. Follow the friendly onboarding guide to grant Full Disk Access in macOS System Settings so it can scan caches and unneeded files.</p>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Ad-Hoc Developer Notice</h4>
+          <p>If macOS shows a security prompt on first open, simply right-click <code>TidyMac.app</code> &rarr; click <strong>Open</strong>, or run <code>xattr -cr /Applications/TidyMac.app</code> in Terminal.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p><strong>Tidy Mac</strong> — Built natively with Swift 6 and SwiftUI for macOS 14+.</p>
+    <p style="margin-top: 6px; font-size: 0.8rem; color: #6E7681;">All deletions move to the macOS Trash. No files are permanently wiped without your manual Trash emptying.</p>
+  </footer>
+
+  <script>
+    function copyInstallCmd() {
+      const cmd = "curl -fsSL " + window.location.origin + "/install.sh | bash";
+      navigator.clipboard.writeText(cmd).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        const orig = btn.innerText;
+        btn.innerText = "✓ Copied!";
+        btn.style.color = "#7EE787";
+        setTimeout(() => {
+          btn.innerText = orig;
+          btn.style.color = "";
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
