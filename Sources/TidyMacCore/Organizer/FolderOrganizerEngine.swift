@@ -138,19 +138,29 @@ public actor FolderOrganizerEngine {
         let batchId = UUID()
         var processedCount = 0
         var totalBytesReclaimed: Int64 = 0
+        var lastError: Error? = nil
+        var validationFailureCount = 0
+        
+        let allActionable = groups.flatMap(\.moves).filter(\.isSelected)
         
         for group in groups {
             let actionableMoves = group.moves.filter(\.isSelected)
             guard !actionableMoves.isEmpty else { continue }
             
             // Create target directory if needed
-            try? fileManager.createDirectory(at: group.destinationFolder, withIntermediateDirectories: true)
+            do {
+                try fileManager.createDirectory(at: group.destinationFolder, withIntermediateDirectories: true)
+            } catch {
+                lastError = error
+                continue
+            }
             
             for move in actionableMoves {
                 let source = move.originalURL
                 
                 // Validate safety
                 guard PathValidator.isPathAllowed(source, allowedRoots: allowedRoots) else {
+                    validationFailureCount += 1
                     continue
                 }
                 
@@ -171,8 +181,16 @@ public actor FolderOrganizerEngine {
                     processedCount += 1
                     totalBytesReclaimed += move.fileSize
                 } catch {
-                    // Skip and continue
+                    lastError = error
                 }
+            }
+        }
+        
+        if processedCount == 0 && !allActionable.isEmpty {
+            if let err = lastError {
+                throw err
+            } else if validationFailureCount > 0 {
+                throw SecurityError.protectedPath("Selected files were rejected by safety invariants.")
             }
         }
         

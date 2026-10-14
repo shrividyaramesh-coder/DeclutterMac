@@ -51,7 +51,6 @@ public struct PathValidator: Sendable {
 
     /// Protected folder/file names relative to the user's home directory.
     private static let protectedHomeRelativePaths: [String] = [
-        "", // User home directory root itself
         ".ssh",
         ".gnupg",
         ".aws",
@@ -89,7 +88,8 @@ public struct PathValidator: Sendable {
         }
 
         // 1. Detect path-traversal sequences
-        if rawPath.contains("/../") || rawPath.hasSuffix("/..") || rawPath == ".." || rawPath.contains("/./") {
+        let rel = url.relativePath
+        if rel.contains("..") || rawPath.hasPrefix("../") || rawPath.contains("/../") || rawPath.hasSuffix("/..") || rawPath == ".." || rawPath.contains("/./") || rawPath.hasPrefix("./") {
             throw SecurityError.pathTraversalAttempt(rawPath)
         }
 
@@ -134,7 +134,8 @@ public struct PathValidator: Sendable {
         }
 
         for relPath in protectedHomeRelativePaths {
-            let fullProtected = relPath.isEmpty ? homePath : "\(homePath)/\(relPath)"
+            guard !relPath.isEmpty else { continue }
+            let fullProtected = "\(homePath)/\(relPath)"
             if canonicalPath == fullProtected || canonicalPath.hasPrefix(fullProtected + "/") {
                 throw SecurityError.protectedPath(canonicalPath)
             }

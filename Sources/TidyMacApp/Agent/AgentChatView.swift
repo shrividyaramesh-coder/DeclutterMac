@@ -275,8 +275,8 @@ public struct AgentChatView: View {
                     
                     Button(action: executePlan) {
                         HStack(spacing: 6) {
-                            Image(systemName: "trash.fill")
-                            Text("Confirm & Move to Trash")
+                            Image(systemName: isMovePlan ? "folder.badge.gearshape" : "trash.fill")
+                            Text(isMovePlan ? "Confirm & Organize Files" : "Confirm & Move to Trash")
                         }
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
@@ -315,19 +315,34 @@ public struct AgentChatView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            // Risk Badge
-            Text(result.wrappedValue.item.riskLabel.title)
-                .font(.caption2)
-                .fontWeight(.bold)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(riskBadgeColor(result.wrappedValue.item.riskLabel).opacity(0.15))
-                .foregroundColor(riskBadgeColor(result.wrappedValue.item.riskLabel))
-                .cornerRadius(4)
+            // Risk / Action Badge
+            if isMovePlan {
+                Text("Organize")
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.accentColor.opacity(0.15))
+                    .foregroundColor(.accentColor)
+                    .cornerRadius(4)
+            } else {
+                Text(result.wrappedValue.item.riskLabel.title)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(riskBadgeColor(result.wrappedValue.item.riskLabel).opacity(0.15))
+                    .foregroundColor(riskBadgeColor(result.wrappedValue.item.riskLabel))
+                    .cornerRadius(4)
+            }
         }
         .padding(8)
         .background(Color(NSColor.windowBackgroundColor))
         .cornerRadius(6)
+    }
+    
+    private var isMovePlan: Bool {
+        generatedPlan?.steps.contains { $0.action == .move } ?? false
     }
     
     private func executionSummarySection(_ summary: PlanExecutionSummary) -> some View {
@@ -337,9 +352,9 @@ public struct AgentChatView: View {
                 .font(.title2)
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("Plan Executed Successfully!")
+                Text(isMovePlan ? "Files Organized Successfully!" : "Plan Executed Successfully!")
                     .font(.headline)
-                Text("\(summary.itemsProcessed) items moved to Trash • Reclaimed \(ByteCountFormatter.string(fromByteCount: summary.bytesReclaimed, countStyle: .file))")
+                Text("\(summary.itemsProcessed) items \(isMovePlan ? "organized into categorized folders" : "moved to Trash") • \(ByteCountFormatter.string(fromByteCount: summary.bytesReclaimed, countStyle: .file)) processed")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -374,15 +389,18 @@ public struct AgentChatView: View {
                 sampleFiles: []
             )
             
-            // Sample test candidates from managed folders
+            // Sample test candidates from managed folders or targeted plan folders
             let defaultFolders = await FileAccessService.shared.getManagedFolderURLs()
+            let planTargetURLs = plan.steps.map { URL(fileURLWithPath: $0.targetFolder) }
+            let foldersToScan = planTargetURLs.isEmpty ? defaultFolders : planTargetURLs
+            
             var candidateItems: [FileItem] = []
-            for folder in defaultFolders {
+            for folder in foldersToScan {
                 if let enumerator = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey], options: [.skipsHiddenFiles, .skipsPackageDescendants]) {
                     var count = 0
                     while let fileURL = enumerator.nextObject() as? URL {
                         count += 1
-                        if count > 200 { break }
+                        if count > 500 { break }
                         let values = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
                         let size = Int64(values?.fileSize ?? 0)
                         let modDate = values?.contentModificationDate ?? Date()

@@ -49,6 +49,12 @@ func runSafetyTests() async {
         expect(!PathValidator.isPathAllowed(url), "Denylist must block user identity path: \(rel)")
     }
     
+    // Legitimate user files inside managed folders MUST be allowed within allowedRoots
+    let userDownloadsFolder = homeURL.appendingPathComponent("Downloads")
+    let validUserFile = userDownloadsFolder.appendingPathComponent("document.pdf")
+    expect(PathValidator.isPathAllowed(validUserFile, allowedRoots: [userDownloadsFolder]), "PathValidator must allow legitimate user files inside allowedRoots")
+    expect(!PathValidator.isPathAllowed(homeURL, allowedRoots: [userDownloadsFolder]), "PathValidator must block home directory even if allowedRoots is set")
+    
     // 3. Git internals protection
     let gitURL = URL(fileURLWithPath: "/Users/test/Projects/myrepo/.git/config")
     expect(!PathValidator.isPathAllowed(gitURL), "Denylist must block .git repository internals")

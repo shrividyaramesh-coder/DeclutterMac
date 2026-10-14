@@ -33,6 +33,8 @@ public struct FolderOrganizerView: View {
                     
                     if !categoryGroups.isEmpty {
                         proposalsSection
+                    } else if !isAnalyzing && errorMessage == nil && executionSummary == nil {
+                        emptyStateGuide
                     }
                     
                     if let summary = executionSummary {
@@ -49,6 +51,12 @@ public struct FolderOrganizerView: View {
             if selectedFolder == nil {
                 selectedFolder = folders.first(where: { $0.lastPathComponent == "Downloads" }) ?? folders.first
             }
+            if categoryGroups.isEmpty && selectedFolder != nil {
+                analyzeSelectedFolder()
+            }
+        }
+        .onChange(of: selectedFolder) { _, _ in
+            analyzeSelectedFolder()
         }
     }
     
@@ -139,6 +147,25 @@ public struct FolderOrganizerView: View {
         .padding(12)
         .background(Color.red.opacity(0.1))
         .cornerRadius(8)
+    }
+    
+    private var emptyStateGuide: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "folder.badge.gearshape")
+                .font(.system(size: 40))
+                .foregroundColor(.accentColor)
+            Text("Ready to Organize")
+                .font(.headline)
+            Text("Click **Analyze & Propose Structure** above to inspect loose files in your selected folder and preview smart category groupings.")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 420)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(12)
     }
     
     private var proposalsSection: some View {

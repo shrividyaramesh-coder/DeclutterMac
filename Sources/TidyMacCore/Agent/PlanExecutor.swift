@@ -23,8 +23,11 @@ public struct PlanMatchResult: Identifiable, Sendable, Equatable {
         self.action = action
         self.destinationFolder = destinationFolder
         self.explanation = explanation
-        self.isSelected = (item.riskLabel != .manual) && isSelected
-        self.canExecute = (item.riskLabel != .manual)
+        let isMove = (action == .move)
+        // Organization moves are non-destructive, so items can be selected and executed.
+        // Trashing/cleaning strictly prevents manual-risk items from being selected or executed.
+        self.isSelected = (isMove || item.riskLabel != .manual) && isSelected
+        self.canExecute = isMove || (item.riskLabel != .manual)
     }
 }
 
@@ -61,12 +64,13 @@ public actor PlanExecutor {
         for candidate in candidates {
             for step in plan.steps {
                 if matches(file: candidate, filter: step.filter, relativeTo: now) {
+                    let isMove = (step.action == .move)
                     let result = PlanMatchResult(
                         item: candidate,
                         action: step.action,
                         destinationFolder: step.destinationFolder,
                         explanation: step.explanation,
-                        isSelected: candidate.riskLabel == .safe
+                        isSelected: isMove ? true : (candidate.riskLabel == .safe)
                     )
                     results.append(result)
                     break // First matching step takes precedence

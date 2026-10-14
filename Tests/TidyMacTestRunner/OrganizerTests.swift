@@ -32,10 +32,24 @@ func runOrganizerTests() async {
     let codeFile = sourceFolder.appendingPathComponent("script.swift")
     FileManager.default.createFile(atPath: codeFile.path, contents: Data("Swift code".utf8))
     
-    // 1. Taxonomy Analysis Test
+    // 1. Taxonomy Analysis Test (with baseDestination)
     var groups = await engine.analyzeFolder(targetFolder: sourceFolder, baseDestination: destFolder)
     expectEqual(groups.count, 4, "Generated 4 distinct category groups")
     
+    // 1b. In-Place Taxonomy Analysis Test (baseDestination == nil)
+    let inPlaceGroups = await engine.analyzeFolder(targetFolder: sourceFolder)
+    expectEqual(inPlaceGroups.count, 4, "In-place generated 4 distinct category groups")
+    let inPlaceFilesCount = inPlaceGroups.reduce(0) { $0 + $1.moves.count }
+    expectEqual(inPlaceFilesCount, 4, "In-place found all 4 loose files")
+    
+    // In-place moves validation against PathValidator
+    let userDownloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Downloads")
+    let realDownloadsGroups = await engine.analyzeFolder(targetFolder: userDownloads)
+    if let firstGroup = realDownloadsGroups.first, let firstMove = firstGroup.moves.first {
+        let isAllowed = PathValidator.isPathAllowed(firstMove.originalURL, allowedRoots: [userDownloads])
+        expect(isAllowed, "PathValidator must allow legitimate in-place organizer moves inside Downloads")
+    }
+
     let categoryNames = groups.map(\.name)
     expect(categoryNames.contains("Documents/PDFs"), "Classified PDF into Documents/PDFs")
     expect(categoryNames.contains("Media/Images"), "Classified PNG into Media/Images")

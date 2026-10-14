@@ -8,7 +8,7 @@ public struct OfflineHeuristicParser: Sendable {
     
     public func parse(prompt: String, defaultManagedFolder: URL? = nil) -> CleaningPlan {
         let text = prompt.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        let defaultPath = defaultManagedFolder?.path ?? ("~" as NSString).expandingTildeInPath
+        let defaultPath = defaultManagedFolder?.path ?? (("~/Downloads" as NSString).expandingTildeInPath)
         
         var steps: [CleaningPlanStep] = []
         var detectedSummary: String = "Structured cleanup plan generated via offline heuristics."
