@@ -86,6 +86,8 @@ struct MainContentView: View {
             AppUninstallerView()
         case .agent:
             AgentChatView()
+        case .organize:
+            FolderOrganizerView()
         case .history:
             HistoryView()
         default:

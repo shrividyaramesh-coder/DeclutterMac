@@ -1,0 +1,106 @@
+import Foundation
+import TidyMacCore
+
+@MainActor
+func runOrganizerTests() async {
+    print("\n--- Running Folder Organizer & Collision-Free Move Tests ---")
+    
+    let engine = FolderOrganizerEngine.shared
+    let preferences = CategoryPreferencesStore.shared
+    await preferences.reset()
+    
+    let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("TidyMacOrganizerTests_\(UUID().uuidString)")
+    let sourceFolder = tempDir.appendingPathComponent("Downloads")
+    let destFolder = sourceFolder.appendingPathComponent("Organized")
+    
+    try? FileManager.default.createDirectory(at: sourceFolder, withIntermediateDirectories: true)
+    
+    defer {
+        try? FileManager.default.removeItem(at: tempDir)
+    }
+    
+    // Seed test files
+    let pdfFile = sourceFolder.appendingPathComponent("annual_report.pdf")
+    FileManager.default.createFile(atPath: pdfFile.path, contents: Data("PDF report".utf8))
+    
+    let imageFile = sourceFolder.appendingPathComponent("holiday.png")
+    FileManager.default.createFile(atPath: imageFile.path, contents: Data("PNG image".utf8))
+    
+    let zipFile = sourceFolder.appendingPathComponent("backup.zip")
+    FileManager.default.createFile(atPath: zipFile.path, contents: Data("ZIP archive".utf8))
+    
+    let codeFile = sourceFolder.appendingPathComponent("script.swift")
+    FileManager.default.createFile(atPath: codeFile.path, contents: Data("Swift code".utf8))
+    
+    // 1. Taxonomy Analysis Test
+    var groups = await engine.analyzeFolder(targetFolder: sourceFolder, baseDestination: destFolder)
+    expectEqual(groups.count, 4, "Generated 4 distinct category groups")
+    
+    let categoryNames = groups.map(\.name)
+    expect(categoryNames.contains("Documents/PDFs"), "Classified PDF into Documents/PDFs")
+    expect(categoryNames.contains("Media/Images"), "Classified PNG into Media/Images")
+    expect(categoryNames.contains("Archives"), "Classified ZIP into Archives")
+    expect(categoryNames.contains("Development/Source Code"), "Classified Swift file into Development/Source Code")
+    
+    // 2. Collision-Safe Target Resolution Test
+    let collisionDir = tempDir.appendingPathComponent("CollisionTest")
+    try? FileManager.default.createDirectory(at: collisionDir, withIntermediateDirectories: true)
+    
+    let baseFile = collisionDir.appendingPathComponent("contract.pdf")
+    FileManager.default.createFile(atPath: baseFile.path, contents: Data("Original contract".utf8))
+    
+    let firstCollision = await engine.resolveCollisionSafeTarget(for: "contract.pdf", in: collisionDir)
+    expectEqual(firstCollision.lastPathComponent, "contract (1).pdf", "Appended (1) suffix on first collision")
+    
+    FileManager.default.createFile(atPath: firstCollision.path, contents: Data("Contract copy 1".utf8))
+    let secondCollision = await engine.resolveCollisionSafeTarget(for: "contract.pdf", in: collisionDir)
+    expectEqual(secondCollision.lastPathComponent, "contract (2).pdf", "Appended (2) suffix on second collision")
+    
+    // 3. User-Learned Preferences Test ("Learn from edits")
+    if let pdfGroupIndex = groups.firstIndex(where: { $0.name == "Documents/PDFs" }) {
+        await engine.updateCategory(
+            groupIndex: pdfGroupIndex,
+            newName: "Finance/Tax_2025",
+            in: &groups,
+            destRoot: destFolder
+        )
+    }
+    
+    let learnedPref = await preferences.preferredCategory(for: "pdf")
+    expectEqual(learnedPref, "Finance/Tax_2025", "Preferences store learned user custom category")
+    
+    // Re-analyzing a new PDF file should now automatically use the learned category
+    let invoiceFile = sourceFolder.appendingPathComponent("invoice.pdf")
+    FileManager.default.createFile(atPath: invoiceFile.path, contents: Data("Invoice".utf8))
+    
+    let updatedGroups = await engine.analyzeFolder(targetFolder: sourceFolder, baseDestination: destFolder)
+    let updatedNames = updatedGroups.map(\.name)
+    expect(updatedNames.contains("Finance/Tax_2025"), "New analysis applied learned category preference")
+    
+    // 4. Atomic Move & Undo Restoration Test
+    let journal = UndoJournal(storageDirectory: tempDir)
+    let executionSummary = try? await engine.applyMoves(
+        groups: updatedGroups,
+        journal: journal,
+        allowedRoots: [tempDir]
+    )
+    
+    expect(executionSummary != nil, "Move execution completed successfully")
+    expectEqual(executionSummary?.itemsProcessed, 5, "Relocated 5 total files")
+    
+    // Verify source files moved
+    expect(!FileManager.default.fileExists(atPath: pdfFile.path), "Original PDF removed from source")
+    expect(!FileManager.default.fileExists(atPath: imageFile.path), "Original Image removed from source")
+    
+    // Verify files exist in organized subfolders
+    let movedPDF = destFolder.appendingPathComponent("Finance/Tax_2025/annual_report.pdf")
+    expect(FileManager.default.fileExists(atPath: movedPDF.path), "Moved PDF exists in organized destination folder")
+    
+    // Verify Undo Restoration restores moved files back to source
+    if let batchId = executionSummary?.batchId {
+        let restorationResult = try? await journal.restoreRun(runId: batchId)
+        expectEqual(restorationResult?.restoredCount, 5, "UndoJournal restored all 5 moved files")
+        expect(FileManager.default.fileExists(atPath: pdfFile.path), "Original PDF restored to initial source path")
+        expect(FileManager.default.fileExists(atPath: imageFile.path), "Original Image restored to initial source path")
+    }
+}
