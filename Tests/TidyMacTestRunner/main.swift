@@ -7,6 +7,7 @@ print("=========================================")
 
 runModelTests()
 runLocalizationTests()
+await runSafetyTests()
 
 print("\n=========================================")
 if TestHarness.shared.totalTestFailures.isEmpty {
