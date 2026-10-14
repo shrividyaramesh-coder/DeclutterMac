@@ -10,6 +10,7 @@ public struct FolderOrganizerView: View {
     @State private var categoryGroups: [OrganizationCategoryGroup] = []
     @State private var executionSummary: PlanExecutionSummary? = nil
     @State private var errorMessage: String? = nil
+    @State private var collapsedGroupIndices: Set<Int> = []
     
     public init() {}
     
@@ -20,7 +21,7 @@ public struct FolderOrganizerView: View {
             Divider()
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 20) {
                     folderSelectionSection
                     
                     if isAnalyzing {
@@ -156,7 +157,7 @@ public struct FolderOrganizerView: View {
                 .foregroundColor(.accentColor)
             Text("Ready to Organize")
                 .font(.headline)
-            Text("Click **Analyze & Propose Structure** above to inspect loose files in your selected folder and preview smart category groupings.")
+            Text("Click **Analyze & Propose Structure** above to inspect loose files and folders in your selected folder and preview smart category groupings.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -171,9 +172,19 @@ public struct FolderOrganizerView: View {
     private var proposalsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Proposed Folder Structure (\(totalMovesCount) files)")
+                Text("Proposed Folder Structure (\(totalMovesCount) items)")
                     .font(.headline)
+                
                 Spacer()
+                
+                Button(action: toggleAllCategories) {
+                    Text(collapsedGroupIndices.isEmpty ? "Collapse All" : "Expand All")
+                        .font(.caption)
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.accentColor)
+                .padding(.trailing, 8)
+                
                 Text("Selected: \(ByteCountFormatter.string(fromByteCount: totalSelectedSize, countStyle: .file))")
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -188,6 +199,7 @@ public struct FolderOrganizerView: View {
             HStack(spacing: 12) {
                 Button(action: {
                     categoryGroups = []
+                    collapsedGroupIndices.removeAll()
                 }) {
                     Text("Discard Proposal")
                         .padding(.horizontal, 16)
@@ -216,8 +228,24 @@ public struct FolderOrganizerView: View {
     }
     
     private func categoryGroupCard(index: Int) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let isCollapsed = collapsedGroupIndices.contains(index)
+        
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
+                Button(action: {
+                    if isCollapsed {
+                        collapsedGroupIndices.remove(index)
+                    } else {
+                        collapsedGroupIndices.insert(index)
+                    }
+                }) {
+                    Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
+                        .foregroundColor(.secondary)
+                        .font(.caption.weight(.bold))
+                        .frame(width: 14, height: 14)
+                }
+                .buttonStyle(.plain)
+                
                 Image(systemName: "folder.fill")
                     .foregroundColor(.accentColor)
                 
@@ -245,16 +273,18 @@ public struct FolderOrganizerView: View {
                 
                 Spacer()
                 
-                Text("\(categoryGroups[index].moves.count) files • \(categoryGroups[index].formattedTotalSize)")
+                Text("\(categoryGroups[index].moves.count) items • \(categoryGroups[index].formattedTotalSize)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
-            Divider()
-            
-            VStack(spacing: 6) {
-                ForEach(categoryGroups[index].moves.indices, id: \.self) { moveIndex in
-                    moveRow(groupIndex: index, moveIndex: moveIndex)
+            if !isCollapsed {
+                Divider()
+                
+                LazyVStack(spacing: 6) {
+                    ForEach(categoryGroups[index].moves.indices, id: \.self) { moveIndex in
+                        moveRow(groupIndex: index, moveIndex: moveIndex)
+                    }
                 }
             }
         }
@@ -273,10 +303,27 @@ public struct FolderOrganizerView: View {
             ))
             .labelsHidden()
             
+            Image(systemName: move.isDirectory ? "folder.fill" : "doc.fill")
+                .foregroundColor(move.isDirectory ? .accentColor : .secondary)
+                .font(.body)
+            
             VStack(alignment: .leading, spacing: 2) {
-                Text(move.originalURL.lastPathComponent)
-                    .font(.body)
-                    .fontWeight(.medium)
+                HStack(spacing: 6) {
+                    Text(move.originalURL.lastPathComponent)
+                        .font(.body)
+                        .fontWeight(.medium)
+                    
+                    if move.isDirectory {
+                        Text("Folder")
+                            .font(.system(size: 10, weight: .semibold))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor.opacity(0.15))
+                            .foregroundColor(.accentColor)
+                            .cornerRadius(4)
+                    }
+                }
+                
                 Text("→ \(move.targetURL.path)")
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -302,7 +349,7 @@ public struct FolderOrganizerView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Folder Organization Completed!")
                     .font(.headline)
-                Text("\(summary.itemsProcessed) files relocated into organized subfolders • Reversible via History")
+                Text("\(summary.itemsProcessed) items relocated into organized subfolders • Reversible via History")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -363,6 +410,14 @@ public struct FolderOrganizerView: View {
                     self.errorMessage = error.localizedDescription
                 }
             }
+        }
+    }
+    
+    private func toggleAllCategories() {
+        if collapsedGroupIndices.isEmpty {
+            collapsedGroupIndices = Set(categoryGroups.indices)
+        } else {
+            collapsedGroupIndices.removeAll()
         }
     }
 }

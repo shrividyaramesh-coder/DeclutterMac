@@ -16,7 +16,12 @@ public actor FolderOrganizerEngine {
         self.fileManager = fileManager
     }
     
-    /// Analyzes files in a folder and generates proposed category groups with collision-safe targets.
+    // Reserved top-level category names that must NEVER be moved or re-organized into themselves
+    public static let reservedTopLevelCategories: Set<String> = [
+        "Documents", "Media", "Archives", "Installers", "Development", "Other", "Organized"
+    ]
+    
+    /// Analyzes files and loose folders in a folder and generates proposed category groups with collision-safe targets.
     public func analyzeFolder(
         targetFolder: URL,
         baseDestination: URL? = nil
@@ -24,60 +29,72 @@ public actor FolderOrganizerEngine {
         let destRoot = baseDestination ?? targetFolder
         var movesByCategory: [String: [ProposedMove]] = [:]
         
-        guard let enumerator = fileManager.enumerator(
+        // 1. Collect direct items in targetFolder
+        guard let directItems = try? fileManager.contentsOfDirectory(
             at: targetFolder,
-            includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey],
+            options: [.skipsHiddenFiles]
         ) else {
             return []
         }
         
-        while let fileURL = enumerator.nextObject() as? URL {
-            // Skip directories themselves
-            let values = try? fileURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
-            if values?.isDirectory == true { continue }
+        // Items to analyze: direct items + any items inside legacy targetFolder/Organized
+        var itemsToAnalyze: [URL] = directItems
+        let legacyOrganized = targetFolder.appendingPathComponent("Organized")
+        var isDir: ObjCBool = false
+        if fileManager.fileExists(atPath: legacyOrganized.path, isDirectory: &isDir), isDir.boolValue {
+            if let legacyItems = try? fileManager.contentsOfDirectory(at: legacyOrganized, includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey], options: [.skipsHiddenFiles]) {
+                itemsToAnalyze.append(contentsOf: legacyItems)
+            }
+        }
+        
+        for itemURL in itemsToAnalyze {
+            let itemName = itemURL.lastPathComponent
+            if itemName.hasPrefix(".") { continue }
             
-            let ext = fileURL.pathExtension.lowercased()
-            let size = Int64(values?.fileSize ?? 0)
+            // Check if item is a directory
+            let values = try? itemURL.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey])
+            let isDirectory = values?.isDirectory ?? false
             
-            // 1. Check user-learned category preference
+            // If it's a reserved category folder at the top level of targetFolder, skip it
+            if isDirectory && Self.reservedTopLevelCategories.contains(itemName) && itemURL.deletingLastPathComponent().standardizedFileURL == targetFolder.standardizedFileURL {
+                continue
+            }
+            
             let categoryName: String
-            if let learned = await preferencesStore.preferredCategory(for: ext) {
-                categoryName = learned
+            let size: Int64
+            
+            if isDirectory {
+                // Determine category for loose folder
+                categoryName = Self.defaultCategoryName(forFolder: itemName, folderURL: itemURL)
+                size = fastFolderSize(at: itemURL)
             } else {
-                categoryName = Self.defaultCategoryName(forExtension: ext, filename: fileURL.lastPathComponent)
+                let ext = itemURL.pathExtension.lowercased()
+                if let learned = await preferencesStore.preferredCategory(for: ext) {
+                    categoryName = learned
+                } else {
+                    categoryName = Self.defaultCategoryName(forExtension: ext, filename: itemName)
+                }
+                size = Int64(values?.fileSize ?? 0)
             }
             
             let categoryDestFolder = destRoot.appendingPathComponent(categoryName)
             
-            // Skip files already inside their destination category folder
-            let parentDir = fileURL.deletingLastPathComponent().standardizedFileURL
-            if parentDir == categoryDestFolder.standardizedFileURL || fileURL.path.hasPrefix(categoryDestFolder.path + "/") {
+            // Skip if item is already inside its destination category folder
+            let parentDir = itemURL.deletingLastPathComponent().standardizedFileURL
+            if parentDir == categoryDestFolder.standardizedFileURL || itemURL.path.hasPrefix(categoryDestFolder.path + "/") {
                 continue
             }
             
-            // If organizing in-place (baseDestination == nil), skip files that are already
-            // inside any recognized category subfolder under targetFolder (except old "Organized" remnants)
-            if baseDestination == nil {
-                let relativePath = fileURL.path.replacingOccurrences(of: targetFolder.path + "/", with: "")
-                let pathParts = relativePath.split(separator: "/")
-                if pathParts.count > 1 {
-                    let topFolder = String(pathParts[0])
-                    let recognizedCategories = ["Documents", "Media", "Archives", "Installers", "Development", "Other"]
-                    if recognizedCategories.contains(topFolder) {
-                        continue
-                    }
-                }
-            }
-            
-            let targetURL = resolveCollisionSafeTarget(for: fileURL.lastPathComponent, in: categoryDestFolder)
+            let targetURL = resolveCollisionSafeTarget(for: itemName, in: categoryDestFolder)
             
             let move = ProposedMove(
-                originalURL: fileURL,
+                originalURL: itemURL,
                 targetURL: targetURL,
                 categoryName: categoryName,
                 fileSize: size,
-                isSelected: true
+                isSelected: true,
+                isDirectory: isDirectory
             )
             
             var existing = movesByCategory[categoryName, default: []]
@@ -249,5 +266,79 @@ public actor FolderOrganizerEngine {
         default:
             return "Other"
         }
+    }
+    
+    /// Classifies a loose folder based on its title and internal file signatures.
+    public static func defaultCategoryName(forFolder folderName: String, folderURL: URL? = nil) -> String {
+        let name = folderName.lowercased()
+        
+        // 1. Code / Development projects
+        if name.contains("project") || name.contains("dev") || name.contains("code") ||
+           name.contains("app") || name.contains("repo") || name.contains("git") ||
+           name.contains("stitch") || name.contains("starter") || name.contains("utility") {
+            return "Development/Projects"
+        }
+        
+        // 2. Media / Albums
+        if name.contains("photo") || name.contains("video") || name.contains("image") ||
+           name.contains("pic") || name.contains("art") || name.contains("draw") ||
+           name.contains("nail") || name.contains("album") || name.contains("audio") ||
+           name.contains("music") || name.contains("media") {
+            return "Media/Folders"
+        }
+        
+        // 3. Installers
+        if name.contains("installer") || name.contains("setup") || name.contains("cleanable") {
+            return "Installers/Folders"
+        }
+        
+        // 4. Archives
+        if name.contains("archive") || name.contains("backup") || name.contains("zip") || name.contains("extracted") {
+            return "Archives/Folders"
+        }
+        
+        // 5. Classes / Education / Work / Documents
+        if name.contains("class") || name.contains("course") || name.contains("lecture") ||
+           name.contains("material") || name.contains("study") || name.contains("school") ||
+           name.contains("college") || name.contains("paper") || name.contains("doc") ||
+           name.contains("work") || name.contains("report") || name.contains("consumer") ||
+           name.contains("shriv") || name.contains("personal") || name.contains("general") {
+            return "Documents/Folders"
+        }
+        
+        // 6. Inspect contents if URL provided
+        if let folderURL = folderURL, let contents = try? FileManager.default.contentsOfDirectory(atPath: folderURL.path) {
+            let lowerContents = contents.map { $0.lowercased() }
+            if lowerContents.contains(where: { $0 == "package.json" || $0.hasSuffix(".swift") || $0.hasSuffix(".py") || $0.hasSuffix(".js") || $0 == ".git" }) {
+                return "Development/Projects"
+            }
+            if lowerContents.contains(where: { $0.hasSuffix(".png") || $0.hasSuffix(".jpg") || $0.hasSuffix(".jpeg") || $0.hasSuffix(".mp4") }) {
+                return "Media/Folders"
+            }
+        }
+        
+        return "Documents/Folders"
+    }
+    
+    /// Calculates folder size quickly with an iteration limit to maintain UI responsiveness.
+    public func fastFolderSize(at url: URL) -> Int64 {
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.fileSizeKey, .isDirectoryKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else {
+            return 0
+        }
+        var total: Int64 = 0
+        var count = 0
+        while let fileURL = enumerator.nextObject() as? URL {
+            count += 1
+            if count > 500 { break }
+            let values = try? fileURL.resourceValues(forKeys: [.fileSizeKey, .isDirectoryKey])
+            if values?.isDirectory != true {
+                total += Int64(values?.fileSize ?? 0)
+            }
+        }
+        return total
     }
 }

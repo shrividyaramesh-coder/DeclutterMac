@@ -117,4 +117,57 @@ func runOrganizerTests() async {
         expect(FileManager.default.fileExists(atPath: pdfFile.path), "Original PDF restored to initial source path")
         expect(FileManager.default.fileExists(atPath: imageFile.path), "Original Image restored to initial source path")
     }
+    
+    // 5. Loose Directory Organization & Undo Test
+    let folderDir = tempDir.appendingPathComponent("DownloadsFolderTest")
+    try? FileManager.default.createDirectory(at: folderDir, withIntermediateDirectories: true)
+    
+    let looseCodeProject = folderDir.appendingPathComponent("MyWebApp")
+    try? FileManager.default.createDirectory(at: looseCodeProject, withIntermediateDirectories: true)
+    FileManager.default.createFile(atPath: looseCodeProject.appendingPathComponent("package.json").path, contents: Data("{}".utf8))
+    
+    let looseNotesFolder = folderDir.appendingPathComponent("ClassNotes")
+    try? FileManager.default.createDirectory(at: looseNotesFolder, withIntermediateDirectories: true)
+    FileManager.default.createFile(atPath: looseNotesFolder.appendingPathComponent("lecture1.docx").path, contents: Data("Notes".utf8))
+    
+    let looseFile = folderDir.appendingPathComponent("cheatsheet.pdf")
+    FileManager.default.createFile(atPath: looseFile.path, contents: Data("Cheatsheet".utf8))
+    
+    let mixedGroups = await engine.analyzeFolder(targetFolder: folderDir)
+    let mixedMoves = mixedGroups.flatMap(\.moves)
+    expectEqual(mixedMoves.count, 3, "Detected 2 loose folders and 1 loose file")
+    
+    let webAppMove = mixedMoves.first(where: { $0.originalURL.lastPathComponent == "MyWebApp" })
+    expect(webAppMove != nil, "Found MyWebApp move")
+    expectEqual(webAppMove?.isDirectory, true, "MyWebApp identified as directory")
+    expectEqual(webAppMove?.categoryName, "Development/Projects", "MyWebApp categorized into Development/Projects")
+    
+    let notesMove = mixedMoves.first(where: { $0.originalURL.lastPathComponent == "ClassNotes" })
+    expect(notesMove != nil, "Found ClassNotes move")
+    expectEqual(notesMove?.isDirectory, true, "ClassNotes identified as directory")
+    expectEqual(notesMove?.categoryName, "Documents/Folders", "ClassNotes categorized into Documents/Folders")
+    
+    let pdfMove = mixedMoves.first(where: { $0.originalURL.lastPathComponent == "cheatsheet.pdf" })
+    expectEqual(pdfMove?.isDirectory, false, "PDF identified as file")
+    
+    // Test applying moves for folders
+    let folderJournal = UndoJournal(storageDirectory: tempDir)
+    let folderExecSummary = try? await engine.applyMoves(
+        groups: mixedGroups,
+        journal: folderJournal,
+        allowedRoots: [tempDir]
+    )
+    expectEqual(folderExecSummary?.itemsProcessed, 3, "Moved 3 items (2 folders, 1 file)")
+    expect(!FileManager.default.fileExists(atPath: looseCodeProject.path), "Original loose folder removed from source root")
+    let targetProject = folderDir.appendingPathComponent("Development/Projects/MyWebApp")
+    expect(FileManager.default.fileExists(atPath: targetProject.path), "Loose folder moved to Development/Projects/MyWebApp")
+    expect(FileManager.default.fileExists(atPath: targetProject.appendingPathComponent("package.json").path), "Internal folder contents preserved intact")
+    
+    // Test undo restoration of directory
+    if let batchId = folderExecSummary?.batchId {
+        let undoResult = try? await folderJournal.restoreRun(runId: batchId)
+        expectEqual(undoResult?.restoredCount, 3, "UndoJournal restored all items including folders")
+        expect(FileManager.default.fileExists(atPath: looseCodeProject.path), "Loose directory restored back to source root")
+        expect(FileManager.default.fileExists(atPath: looseCodeProject.appendingPathComponent("package.json").path), "Restored folder contents fully intact")
+    }
 }

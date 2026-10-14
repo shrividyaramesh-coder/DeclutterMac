@@ -8,6 +8,7 @@ public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
     public var categoryName: String
     public let fileSize: Int64
     public var isSelected: Bool
+    public var isDirectory: Bool
     
     public init(
         id: UUID = UUID(),
@@ -15,7 +16,8 @@ public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
         targetURL: URL,
         categoryName: String,
         fileSize: Int64,
-        isSelected: Bool = true
+        isSelected: Bool = true,
+        isDirectory: Bool = false
     ) {
         self.id = id
         self.originalURL = originalURL
@@ -23,6 +25,7 @@ public struct ProposedMove: Identifiable, Sendable, Codable, Equatable {
         self.categoryName = categoryName
         self.fileSize = fileSize
         self.isSelected = isSelected
+        self.isDirectory = isDirectory
     }
     
     public var formattedSize: String {
