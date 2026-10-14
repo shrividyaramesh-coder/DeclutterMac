@@ -11,6 +11,11 @@ public struct FolderOrganizerView: View {
     @State private var executionSummary: PlanExecutionSummary? = nil
     @State private var errorMessage: String? = nil
     @State private var collapsedGroupIndices: Set<Int> = []
+    @State private var folderSortsUsed: Int = 0
+    @State private var isLifetimeUnlocked: Bool = false
+    @State private var showPaywallSheet: Bool = false
+    @State private var paywallKeyInput: String = ""
+    @State private var paywallMessage: String? = nil
     
     public init() {}
     
@@ -46,7 +51,11 @@ public struct FolderOrganizerView: View {
             }
         }
         .background(Color(NSColor.windowBackgroundColor))
+        .sheet(isPresented: $showPaywallSheet) {
+            paywallSheetView
+        }
         .task {
+            await refreshLicenseAndSorts()
             let folders = await FileAccessService.shared.getManagedFolderURLs()
             availableFolders = folders
             if selectedFolder == nil {
@@ -80,6 +89,33 @@ public struct FolderOrganizerView: View {
             }
             
             Spacer()
+            
+            if isLifetimeUnlocked {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(.green)
+                    Text("Lifetime Unlocked")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.green.opacity(0.12))
+                .cornerRadius(8)
+            } else {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .foregroundColor(.accentColor)
+                    let remaining = max(0, 2 - folderSortsUsed)
+                    Text("Free: \(remaining) of 2 sorts left")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.accentColor.opacity(0.12))
+                .cornerRadius(8)
+            }
             
             HStack(spacing: 6) {
                 Image(systemName: "arrow.counterclockwise.circle.fill")
@@ -394,12 +430,23 @@ public struct FolderOrganizerView: View {
         guard !categoryGroups.isEmpty, let folder = selectedFolder else { return }
         
         Task {
+            let canSort = await LocalLicenseProvider.shared.canSortFolder()
+            if !canSort {
+                await MainActor.run {
+                    self.showPaywallSheet = true
+                }
+                return
+            }
+            
             do {
                 let summary = try await FolderOrganizerEngine.shared.applyMoves(
                     groups: categoryGroups,
                     journal: UndoJournal.shared,
                     allowedRoots: [folder]
                 )
+                
+                await LocalLicenseProvider.shared.recordFolderSort()
+                await refreshLicenseAndSorts()
                 
                 await MainActor.run {
                     self.executionSummary = summary
@@ -411,6 +458,113 @@ public struct FolderOrganizerView: View {
                 }
             }
         }
+    }
+    
+    private func refreshLicenseAndSorts() async {
+        let sorts = await LocalLicenseProvider.shared.folderSortsCount()
+        let status = await LocalLicenseProvider.shared.currentStatus()
+        let unlocked: Bool
+        if case .unlocked = status {
+            unlocked = true
+        } else {
+            unlocked = false
+        }
+        await MainActor.run {
+            self.folderSortsUsed = sorts
+            self.isLifetimeUnlocked = unlocked
+        }
+    }
+    
+    private var paywallSheetView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.accentColor)
+            
+            VStack(spacing: 6) {
+                Text("Free Folder Sorts Used")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Text("You have organized your 2 free folders! Unlock lifetime unlimited folder sorting and Mac cleaning for just $7.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 380)
+            }
+            
+            VStack(spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Tidy Mac Lifetime License")
+                            .font(.body)
+                            .fontWeight(.semibold)
+                        Text("Unlimited folder sorting & cleaning on all your Macs")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Text("$7.00")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.accentColor)
+                }
+                .padding(14)
+                .background(Color(NSColor.controlBackgroundColor))
+                .cornerRadius(10)
+                
+                HStack(spacing: 8) {
+                    TextField("Enter $7 Lifetime License Key", text: $paywallKeyInput)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    Button("Unlock") {
+                        Task {
+                            let success = await LocalLicenseProvider.shared.unlockLifetime(key: paywallKeyInput)
+                            if success {
+                                await refreshLicenseAndSorts()
+                                await MainActor.run {
+                                    self.showPaywallSheet = false
+                                }
+                            } else {
+                                await MainActor.run {
+                                    self.paywallMessage = "Invalid license key format."
+                                }
+                            }
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(paywallKeyInput.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                
+                if let msg = paywallMessage {
+                    Text(msg)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                
+                Button(action: {
+                    if let url = URL(string: "http://localhost:8000") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "cart.fill")
+                        Text("Purchase $7 Lifetime License Online")
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                }
+                .buttonStyle(.bordered)
+            }
+            
+            Button("Close") {
+                showPaywallSheet = false
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(.secondary)
+            .font(.caption)
+        }
+        .padding(32)
+        .frame(width: 460)
     }
     
     private func toggleAllCategories() {

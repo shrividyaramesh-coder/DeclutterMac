@@ -177,4 +177,24 @@ func runEndToEndFixtureTests() async {
     expect(unlocked, "Successfully unlocked lifetime license")
     let unlockedStatus = await licenseProvider.currentStatus()
     expectEqual(unlockedStatus, .unlocked(licenseKey: "TM-2026-LIFETIME-PRO"), "License status reflects unlocked lifetime state")
+    
+    // 7. Folder Sorting Freemium Verification (2 Free Folder Sorts, then $7 Lifetime)
+    await licenseProvider.reset()
+    let initialCanSort = await licenseProvider.canSortFolder()
+    expect(initialCanSort, "New user starts with folder sorting authorization")
+    expectEqual(await licenseProvider.folderSortsCount(), 0, "Initial folder sorts count is 0")
+    
+    // Perform sort 1
+    await licenseProvider.recordFolderSort()
+    expectEqual(await licenseProvider.folderSortsCount(), 1, "First folder sort recorded")
+    expect(await licenseProvider.canSortFolder(), "User can sort second folder")
+    
+    // Perform sort 2
+    await licenseProvider.recordFolderSort()
+    expectEqual(await licenseProvider.folderSortsCount(), 2, "Second folder sort recorded")
+    expect(!(await licenseProvider.canSortFolder()), "User cannot sort 3rd folder on free trial")
+    
+    // Unlock with $7 lifetime key
+    _ = await licenseProvider.unlockLifetime(key: "TM7-LIFETIME-A89F-4C21")
+    expect(await licenseProvider.canSortFolder(), "Lifetime unlock allows unlimited folder sorting")
 }

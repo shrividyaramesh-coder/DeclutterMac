@@ -17,6 +17,7 @@ public struct SettingsView: View {
     @State private var showMenuBarIcon: Bool = true
     @State private var showOnboardingSheet: Bool = false
     @State private var scheduleSettings: ScheduleSettings = ScheduleSettings()
+    @State private var folderSortsUsed: Int = 0
     
     public init() {}
     
@@ -352,8 +353,26 @@ public struct SettingsView: View {
                 } else {
                     Divider()
                     
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Folder Organization Allowance")
+                                .font(.body)
+                                .fontWeight(.semibold)
+                            Text("First 2 folders free • $7 one-time purchase for lifetime unlimited access")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Text("\(min(2, folderSortsUsed)) of 2 Folders Used")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(folderSortsUsed >= 2 ? .orange : .accentColor)
+                    }
+                    
+                    Divider()
+                    
                     HStack(spacing: 12) {
-                        TextField("Enter Lifetime License Key", text: $unlockKeyInput)
+                        TextField("Enter $7 Lifetime License Key", text: $unlockKeyInput)
                             .textFieldStyle(.roundedBorder)
                         
                         Button("Unlock") {
@@ -419,6 +438,7 @@ public struct SettingsView: View {
         let anthropic = KeychainService.shared.getKey(forAccount: "anthropic_api_key") ?? ""
         let openai = KeychainService.shared.getKey(forAccount: "openai_api_key") ?? ""
         let schedule = await ScheduleCoordinator.shared.getSettings()
+        let sorts = await LocalLicenseProvider.shared.folderSortsCount()
         
         await MainActor.run {
             self.licenseStatus = status
@@ -426,6 +446,7 @@ public struct SettingsView: View {
             self.anthropicKey = anthropic
             self.openAIKey = openai
             self.scheduleSettings = schedule
+            self.folderSortsUsed = sorts
         }
     }
     
