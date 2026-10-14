@@ -16,6 +16,7 @@ public struct SettingsView: View {
     @State private var launchAtLogin: Bool = true
     @State private var showMenuBarIcon: Bool = true
     @State private var showOnboardingSheet: Bool = false
+    @State private var scheduleSettings: ScheduleSettings = ScheduleSettings()
     
     public init() {}
     
@@ -30,13 +31,16 @@ public struct SettingsView: View {
                 // Section 1: General & Localization
                 generalSection
                 
-                // Section 2: AI Provider & API Keys
+                // Section 2: Continuous Cleanup Schedule (Set & Forget)
+                scheduleSection
+                
+                // Section 3: AI Provider & API Keys
                 aiProviderSection
                 
-                // Section 3: Trial & Licensing
+                // Section 4: Trial & Licensing
                 licensingSection
                 
-                // Section 4: Managed Folders & Permissions
+                // Section 5: Managed Folders & Permissions
                 managedFoldersSection
             }
             .padding(28)
@@ -115,6 +119,95 @@ public struct SettingsView: View {
                         showOnboardingSheet = true
                     }
                     .buttonStyle(.bordered)
+                }
+            }
+            .padding(16)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var scheduleSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Continuous Cleanup Schedule (Set & Forget)")
+                    .font(.headline)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { scheduleSettings.isEnabled },
+                    set: { enabled in
+                        scheduleSettings.isEnabled = enabled
+                        Task {
+                            await ScheduleCoordinator.shared.updateSettings(scheduleSettings)
+                            let exeURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
+                            if enabled {
+                                _ = try? LaunchAgentManager.shared.install(executableURL: exeURL, frequency: scheduleSettings.frequency)
+                            } else {
+                                LaunchAgentManager.shared.uninstall()
+                            }
+                        }
+                    }
+                ))
+                .labelsHidden()
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Automate recurring cleanups in the background even when Tidy Mac is closed. Only rules you have approved will be executed.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                if scheduleSettings.isEnabled {
+                    Divider()
+                    
+                    HStack(spacing: 16) {
+                        Text("Frequency")
+                            .font(.body)
+                        
+                        Spacer()
+                        
+                        Picker("", selection: Binding(
+                            get: { scheduleSettings.frequency },
+                            set: { freq in
+                                scheduleSettings.frequency = freq
+                                Task {
+                                    await ScheduleCoordinator.shared.updateSettings(scheduleSettings)
+                                    let exeURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
+                                    _ = try? LaunchAgentManager.shared.install(executableURL: exeURL, frequency: freq)
+                                }
+                            }
+                        )) {
+                            Text("Daily").tag(ScheduleFrequency.daily)
+                            Text("Weekly").tag(ScheduleFrequency.weekly)
+                            Text("Monthly").tag(ScheduleFrequency.monthly)
+                            Text("When Free Space < 15 GB").tag(ScheduleFrequency.onLowDiskSpace(thresholdGB: 15))
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 220)
+                    }
+                    
+                    HStack {
+                        if let lastRun = scheduleSettings.lastRunDate {
+                            Text("Last run: \(DateFormatter.localizedString(from: lastRun, dateStyle: .short, timeStyle: .short))")
+                        } else {
+                            Text("Last run: Never")
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            AppState.shared.selectedNavigation = .rules
+                        }) {
+                            HStack(spacing: 4) {
+                                Text("Configure Approved Rules")
+                                Image(systemName: "arrow.right")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.accentColor)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 }
             }
             .padding(16)
@@ -325,12 +418,14 @@ public struct SettingsView: View {
         let folders = await FileAccessService.shared.getManagedFolderURLs()
         let anthropic = KeychainService.shared.getKey(forAccount: "anthropic_api_key") ?? ""
         let openai = KeychainService.shared.getKey(forAccount: "openai_api_key") ?? ""
+        let schedule = await ScheduleCoordinator.shared.getSettings()
         
         await MainActor.run {
             self.licenseStatus = status
             self.managedFolders = folders
             self.anthropicKey = anthropic
             self.openAIKey = openai
+            self.scheduleSettings = schedule
         }
     }
     
