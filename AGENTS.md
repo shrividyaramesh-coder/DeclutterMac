@@ -93,5 +93,5 @@ At the conclusion of each work unit or whenever a non-obvious bug or edge case i
 
 ## 6. Lessons Learned
 
-<!-- New entries are appended below as tasks and solutions compound -->
-*(To be populated as features and solutions are completed)*
+- **Concurrency & Global Utilities**: Cross-cutting utilities (such as `localized()`) must use a thread-safe Sendable store (e.g. `os_unfair_lock`) rather than pure `@MainActor` so non-isolated model properties can access them synchronously without async hops.
+- **CLI Test Reliability**: Standalone `CommandLineTools` lacks `XCTest.framework`; executable test targets like `TidyMacTestRunner` provide deterministic, zero-dependency CI test validation on any macOS machine.
