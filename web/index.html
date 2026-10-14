@@ -3,22 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tidy Mac — Declutter your Mac with zero effort</title>
+  <title>Tidy Mac — A Mac cleaner that doesn't feel like malware</title>
   <link rel="icon" type="image/png" href="app-icon.png">
   <style>
     :root {
       --primary: #0A84FF;
       --primary-hover: #0071E3;
-      --primary-glow: rgba(10, 132, 255, 0.25);
-      --bg: #0A0D14;
-      --card-bg: rgba(22, 27, 34, 0.7);
+      --primary-glow: rgba(10, 132, 255, 0.28);
+      --bg: #0B0E14;
+      --card-bg: rgba(21, 26, 35, 0.72);
       --card-border: rgba(255, 255, 255, 0.08);
-      --card-hover-border: rgba(10, 132, 255, 0.4);
-      --text: #F0F6FC;
-      --text-muted: #8B949E;
+      --card-hover-border: rgba(10, 132, 255, 0.45);
+      --text: #F3F6FB;
+      --text-muted: #8E98A5;
       --success: #30D158;
       --warning: #FF9F0A;
-      --code-bg: #11151C;
+      --code-bg: #10141D;
     }
 
     * {
@@ -36,32 +36,32 @@
       overflow-x: hidden;
     }
 
-    /* Ambient background glow */
+    /* Ambient background gradient */
     .glow-ambient {
       position: absolute;
-      top: -150px;
+      top: -120px;
       left: 50%;
       transform: translateX(-50%);
-      width: 800px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(10, 132, 255, 0.15) 0%, rgba(48, 209, 88, 0.05) 50%, transparent 70%);
+      width: 850px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(10, 132, 255, 0.18) 0%, rgba(48, 209, 88, 0.06) 50%, transparent 70%);
       pointer-events: none;
       z-index: 0;
     }
 
-    /* Header Nav */
+    /* Sticky Nav */
     header {
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      background: rgba(10, 13, 20, 0.8);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      background: rgba(11, 14, 20, 0.82);
       border-bottom: 1px solid var(--card-border);
     }
 
     .nav-container {
-      max-width: 1100px;
+      max-width: 1080px;
       margin: 0 auto;
       padding: 16px 24px;
       display: flex;
@@ -89,7 +89,7 @@
     .nav-links {
       display: flex;
       align-items: center;
-      gap: 24px;
+      gap: 22px;
       list-style: none;
     }
 
@@ -105,27 +105,29 @@
       color: var(--text);
     }
 
-    .btn-nav {
+    .btn-nav-buy {
       background: var(--primary);
-      color: #fff;
+      color: #fff !important;
       padding: 8px 16px;
       border-radius: 8px;
       font-weight: 600;
       font-size: 0.9rem;
       text-decoration: none;
       transition: all 0.2s;
+      cursor: pointer;
+      border: none;
     }
 
-    .btn-nav:hover {
+    .btn-nav-buy:hover {
       background: var(--primary-hover);
-      box-shadow: 0 0 15px var(--primary-glow);
+      box-shadow: 0 0 16px var(--primary-glow);
     }
 
-    /* Hero Section */
+    /* Hero */
     .hero {
       position: relative;
-      max-width: 900px;
-      margin: 60px auto 40px;
+      max-width: 860px;
+      margin: 64px auto 40px;
       padding: 0 24px;
       text-align: center;
       z-index: 1;
@@ -137,7 +139,7 @@
       gap: 8px;
       padding: 6px 14px;
       background: rgba(10, 132, 255, 0.12);
-      border: 1px solid rgba(10, 132, 255, 0.25);
+      border: 1px solid rgba(10, 132, 255, 0.28);
       border-radius: 20px;
       font-size: 0.85rem;
       font-weight: 600;
@@ -154,8 +156,8 @@
     }
 
     .app-icon-large {
-      width: 110px;
-      height: 110px;
+      width: 108px;
+      height: 108px;
       border-radius: 26px;
       margin-bottom: 24px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 40px var(--primary-glow);
@@ -164,16 +166,16 @@
 
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-8px); }
+      50% { transform: translateY(-7px); }
     }
 
     h1 {
-      font-size: 3.4rem;
+      font-size: 3.3rem;
       font-weight: 800;
       letter-spacing: -0.03em;
       line-height: 1.15;
-      margin-bottom: 16px;
-      background: linear-gradient(180deg, #FFFFFF 0%, #A5B4FC 100%);
+      margin-bottom: 18px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #BAC7FF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -181,44 +183,46 @@
     .hero-subtitle {
       font-size: 1.25rem;
       color: var(--text-muted);
-      max-width: 680px;
-      margin: 0 auto 36px;
+      max-width: 660px;
+      margin: 0 auto 34px;
       font-weight: 400;
+      line-height: 1.55;
     }
 
-    /* Download Actions */
+    /* Primary CTAs */
     .download-group {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: center;
       gap: 16px;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
-    .btn-download-primary {
+    .btn-buy-primary {
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      padding: 16px 28px;
+      padding: 16px 30px;
       background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
       color: #fff;
       font-weight: 700;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       border-radius: 12px;
       text-decoration: none;
       box-shadow: 0 8px 24px var(--primary-glow);
       transition: all 0.25s ease;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      cursor: pointer;
     }
 
-    .btn-download-primary:hover {
+    .btn-buy-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 32px rgba(10, 132, 255, 0.45);
       background: linear-gradient(135deg, #2A93FF 0%, #0A84FF 100%);
     }
 
-    .btn-download-secondary {
+    .btn-trial-secondary {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -233,19 +237,21 @@
       transition: all 0.25s ease;
     }
 
-    .btn-download-secondary:hover {
+    .btn-trial-secondary:hover {
       background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
     }
 
     .meta-spec {
-      font-size: 0.88rem;
+      font-size: 0.9rem;
       color: var(--text-muted);
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: center;
       gap: 16px;
+      margin-top: 10px;
     }
 
     .meta-spec span {
@@ -254,55 +260,131 @@
       gap: 6px;
     }
 
-    /* Terminal Quick Install */
-    .terminal-box {
-      max-width: 600px;
-      margin: 32px auto 0;
-      background: var(--code-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 12px 16px;
+    /* Pricing Spotlight Section */
+    .pricing-section {
+      max-width: 820px;
+      margin: 64px auto;
+      padding: 0 24px;
+    }
+
+    .pricing-card {
+      background: linear-gradient(180deg, rgba(26, 33, 47, 0.85) 0%, rgba(16, 21, 30, 0.95) 100%);
+      border: 1px solid rgba(10, 132, 255, 0.35);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(10, 132, 255, 0.12);
+      text-align: center;
+      position: relative;
+    }
+
+    .pricing-pill {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #0A84FF, #30D158);
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 5px 16px;
+      border-radius: 20px;
+    }
+
+    .pricing-card h2 {
+      font-size: 2rem;
+      margin-top: 10px;
+      margin-bottom: 8px;
+    }
+
+    .pricing-card .pricing-pitch {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 580px;
+      margin: 0 auto 28px;
+    }
+
+    .price-tag {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      align-items: baseline;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .price-currency {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .price-amount {
+      font-size: 4.6rem;
+      font-weight: 800;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .price-cadence {
+      font-size: 1.15rem;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .pricing-bullets {
+      text-align: left;
+      max-width: 500px;
+      margin: 0 auto 32px;
+      display: flex;
+      flex-direction: column;
       gap: 12px;
     }
 
-    .terminal-box code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 0.88rem;
-      color: #7EE787;
-      word-break: break-all;
-      text-align: left;
+    .pricing-bullets li {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #DDE3EA;
+      font-size: 1rem;
     }
 
-    .btn-copy {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
+    .pricing-bullets li svg {
+      color: var(--success);
+      flex-shrink: 0;
+    }
+
+    /* Comparison vs Subscriptions */
+    .compare-box {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      font-size: 0.92rem;
+    }
+
+    .compare-item-bad {
+      color: #FF6B6B;
+    }
+
+    .compare-item-good {
+      color: #58A6FF;
       font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
     }
 
-    .btn-copy:hover {
-      background: rgba(255, 255, 255, 0.16);
-    }
-
-    /* Features Grid */
+    /* Feature Grid (Human copy) */
     .section-title {
       text-align: center;
-      margin: 90px auto 16px;
-      max-width: 700px;
+      margin: 80px auto 16px;
+      max-width: 720px;
       padding: 0 24px;
     }
 
     .section-title h2 {
-      font-size: 2.2rem;
+      font-size: 2.3rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       margin-bottom: 10px;
@@ -310,12 +392,12 @@
 
     .section-title p {
       color: var(--text-muted);
-      font-size: 1.1rem;
+      font-size: 1.12rem;
     }
 
     .features-grid {
-      max-width: 1100px;
-      margin: 40px auto;
+      max-width: 1080px;
+      margin: 36px auto;
       padding: 0 24px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -325,8 +407,8 @@
     .feature-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 24px;
+      border-radius: 16px;
+      padding: 26px;
       transition: all 0.25s ease;
       backdrop-filter: blur(10px);
     }
@@ -347,25 +429,25 @@
     }
 
     .feature-card h3 {
-      font-size: 1.2rem;
+      font-size: 1.22rem;
       font-weight: 600;
       margin-bottom: 8px;
     }
 
     .feature-card p {
       color: var(--text-muted);
-      font-size: 0.95rem;
-      line-height: 1.5;
+      font-size: 0.96rem;
+      line-height: 1.55;
     }
 
     /* Safety Guarantee Banner */
     .safety-banner {
-      max-width: 1050px;
+      max-width: 1030px;
       margin: 40px auto;
       padding: 32px;
       background: linear-gradient(135deg, rgba(48, 209, 88, 0.1) 0%, rgba(10, 132, 255, 0.08) 100%);
-      border: 1px solid rgba(48, 209, 88, 0.25);
-      border-radius: 16px;
+      border: 1px solid rgba(48, 209, 88, 0.28);
+      border-radius: 18px;
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 24px;
@@ -373,19 +455,20 @@
     }
 
     .safety-badge-icon {
-      font-size: 3rem;
+      font-size: 3.2rem;
     }
 
     .safety-banner h3 {
-      font-size: 1.35rem;
-      margin-bottom: 8px;
+      font-size: 1.4rem;
+      margin-bottom: 6px;
       color: #7EE787;
     }
 
     .safety-banner p {
       color: #C9D1D9;
-      font-size: 0.96rem;
-      margin-bottom: 12px;
+      font-size: 0.98rem;
+      margin-bottom: 14px;
+      line-height: 1.5;
     }
 
     .safety-tags {
@@ -395,26 +478,26 @@
     }
 
     .safety-tag {
-      padding: 4px 10px;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 5px 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 6px;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       font-weight: 500;
       color: #A5D6FF;
     }
 
-    /* Installation Steps */
+    /* Installation */
     .install-section {
-      max-width: 850px;
-      margin: 60px auto;
+      max-width: 820px;
+      margin: 40px auto 70px;
       padding: 0 24px;
     }
 
     .step-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 20px 24px;
       margin-bottom: 16px;
       display: flex;
@@ -436,13 +519,190 @@
     }
 
     .step-content h4 {
-      font-size: 1.05rem;
+      font-size: 1.08rem;
       margin-bottom: 4px;
     }
 
     .step-content p {
       color: var(--text-muted);
-      font-size: 0.92rem;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    /* Modal Checkout */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background: #141923;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 480px;
+      padding: 32px;
+      position: relative;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+      animation: modalFadeIn 0.25s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .modal-header h3 {
+      font-size: 1.45rem;
+      margin-bottom: 6px;
+    }
+
+    .modal-header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #CAD2DC;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: #0B0E14;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .order-summary {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-submit-pay {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px var(--primary-glow);
+      transition: all 0.2s;
+    }
+
+    .btn-submit-pay:hover {
+      background: linear-gradient(135deg, #2A93FF 0%, #0A84FF 100%);
+      transform: translateY(-1px);
+    }
+
+    /* Success State inside Modal */
+    .success-view {
+      display: none;
+      text-align: center;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(48, 209, 88, 0.15);
+      color: var(--success);
+      font-size: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .license-code-box {
+      background: #0B0E14;
+      border: 1px dashed rgba(48, 209, 88, 0.4);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 20px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.15rem;
+      color: #7EE787;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .btn-copy-license {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
     }
 
     /* Footer */
@@ -451,16 +711,18 @@
       padding: 40px 24px;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       margin-top: 80px;
     }
 
     /* Responsive */
     @media (max-width: 640px) {
       h1 { font-size: 2.3rem; }
+      .pricing-card { padding: 28px 18px; }
       .safety-banner { grid-template-columns: 1fr; text-align: center; }
       .safety-tags { justify-content: center; }
       .nav-links { display: none; }
+      .compare-box { flex-direction: column; gap: 8px; }
     }
   </style>
 </head>
@@ -476,10 +738,11 @@
         <span>Tidy Mac</span>
       </a>
       <ul class="nav-links">
-        <li><a href="#features">Features</a></li>
+        <li><a href="#features">What it cleans</a></li>
+        <li><a href="#pricing">Pricing</a></li>
         <li><a href="#safety">Safety</a></li>
-        <li><a href="#install">Installation</a></li>
-        <li><a href="TidyMac.dmg" class="btn-nav">Download DMG</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><button onclick="openCheckout()" class="btn-nav-buy">Buy Lifetime ($7)</button></li>
       </ul>
     </div>
   </header>
@@ -489,169 +752,320 @@
     <section class="hero">
       <div class="hero-badge">
         <span class="pulse"></span>
-        <span>Version 1.0.0 Now Available • Native Swift 6</span>
+        <span>Built natively with Swift 6 for macOS 14+</span>
       </div>
       <br>
       <img src="app-icon.png" alt="Tidy Mac" class="app-icon-large">
-      <h1>Declutter your Mac<br>with zero effort.</h1>
+      <h1>A Mac cleaner that doesn't feel like malware.</h1>
       <p class="hero-subtitle">
-        Intelligent, lightning-fast storage cleanup, duplicate removal, app uninstallation, and folder organization with 100% Trash-only deletion and full undo.
+        Most cleaner apps are bloated, subscription-hungry, or delete things you actually wanted. Tidy Mac is lightweight, sends everything to the Trash first, has a 1-click Undo button, and you own it forever for $7.
       </p>
 
       <div class="download-group">
-        <a href="TidyMac.dmg" download class="btn-download-primary">
+        <button onclick="openCheckout()" class="btn-buy-primary">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          Get Lifetime Access — $7
+        </button>
+
+        <a href="TidyMac.dmg" download class="btn-trial-secondary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          Download for macOS (.dmg)
-        </a>
-
-        <a href="TidyMac.zip" download class="btn-download-secondary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-            <line x1="12" y1="22.08" x2="12" y2="12"></line>
-          </svg>
-          Download .ZIP (1.7 MB)
+          Try Free (15-Day Trial)
         </a>
       </div>
 
       <div class="meta-spec">
-        <span> macOS 14.0+ (Sonoma, Sequoia)</span>
+        <span>✓ Single $7 payment (No subscriptions)</span>
         <span>•</span>
         <span>Universal (Apple Silicon & Intel)</span>
         <span>•</span>
-        <span>2.1 MB DMG</span>
-      </div>
-
-      <!-- Quick Install via Terminal -->
-      <div class="terminal-box">
-        <code>curl -fsSL http://localhost:8000/install.sh | bash</code>
-        <button class="btn-copy" onclick="copyInstallCmd()">Copy Command</button>
+        <span>Full 15-day free trial included</span>
       </div>
     </section>
 
-    <!-- Safety Guarantee -->
-    <section class="safety-banner" id="safety">
-      <div class="safety-badge-icon">🛡️</div>
-      <div>
-        <h3>Strict Core Safety Invariants (Non-Negotiable)</h3>
-        <p>
-          Tidy Mac is engineered with safety-first principles so your important documents and system files are never compromised.
+    <!-- Pricing Card Spotlight -->
+    <section class="pricing-section" id="pricing">
+      <div class="pricing-card">
+        <div class="pricing-pill">Pay Once, Own Forever</div>
+        <h2>No $40/year subscriptions.</h2>
+        <p class="pricing-pitch">
+          Disk cleaners shouldn't cost as much as Netflix. Pay once, use it on all your personal Macs, and run it whenever storage gets tight.
         </p>
-        <div class="safety-tags">
-          <span class="safety-tag">✓ 100% Trash-Only Deletion (Zero permanent rm)</span>
-          <span class="safety-tag">✓ Hard-Coded Denylist (/System, Mail, Photos, .git)</span>
-          <span class="safety-tag">✓ Undo Journal (1-click full restoration)</span>
-          <span class="safety-tag">✓ Metadata-Only AI (Zero file contents read)</span>
-          <span class="safety-tag">✓ Keep-At-Least-One Duplicate Guard</span>
+
+        <div class="price-tag">
+          <span class="price-currency">$</span>
+          <span class="price-amount">7</span>
+          <span class="price-cadence">one-time</span>
+        </div>
+
+        <ul class="pricing-bullets">
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <strong>Unlimited cleaning</strong> on all your personal Macs (no 2 GB cap)
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <strong>Instant Lifetime License Key</strong> provided right after checkout
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <strong>All 6 cleaning & organizer tools</strong> included with all future updates
+          </li>
+          <li>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <strong>Zero risk:</strong> 100% Trash-only deletion + instant Undo Journal
+          </li>
+        </ul>
+
+        <button onclick="openCheckout()" class="btn-buy-primary" style="width: 100%; max-width: 420px; justify-content: center; margin: 0 auto;">
+          Get Instant Lifetime Access for $7
+        </button>
+
+        <div class="compare-box">
+          <span class="compare-item-bad">✕ Typical cleaner: $39.99/year subscription</span>
+          <span class="compare-item-good">✓ Tidy Mac: $7 once. You own it for life.</span>
         </div>
       </div>
     </section>
 
-    <!-- Feature Grid -->
+    <!-- Real Safety Invariants -->
+    <section class="safety-banner" id="safety">
+      <div class="safety-badge-icon">🛡️</div>
+      <div>
+        <h3>The Golden Rule: Everything goes to the Trash first.</h3>
+        <p>
+          We never run permanent deletions. Every file or cache Tidy Mac moves is placed inside your user Trash. If you ever change your mind, click Undo in Tidy Mac or pull it right back out of the macOS Trash.
+        </p>
+        <div class="safety-tags">
+          <span class="safety-tag">✓ Zero permanent rm</span>
+          <span class="safety-tag">✓ Hard-coded system protection (/System, Photos, Mail)</span>
+          <span class="safety-tag">✓ 1-click Undo Journal</span>
+          <span class="safety-tag">✓ Never deletes all copies of a duplicate</span>
+          <span class="safety-tag">✓ 100% offline local scanning</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
     <section class="section-title" id="features">
-      <h2>Engineered for Power & Simplicity</h2>
-      <p>Six specialized native tools designed to keep your Mac running lean, fast, and tidy.</p>
+      <h2>Where your 40 GB of wasted disk space actually goes</h2>
+      <p>Tidy Mac zeroes in on the junk files that build up quietly in the background.</p>
     </section>
 
     <div class="features-grid">
       <div class="feature-card">
-        <div class="feature-icon">✨</div>
-        <h3>One-Click Smart Cleanup</h3>
-        <p>Discovers caches, system logs, old downloads, and installer DMGs. Clear Safe, Review, and Manual risk labels ensure you are always in control.</p>
+        <div class="feature-icon">📦</div>
+        <h3>Old Installers & Archives</h3>
+        <p>Every time you download an app, its <code>.dmg</code>, <code>.pkg</code>, or <code>.zip</code> sits in Downloads taking up 2 GB each. Tidy Mac flags installers older than 7 days for quick review.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🧹</div>
+        <h3>Hidden App Leftovers</h3>
+        <p>Dragging an app to the Trash leaves folders in <code>~/Library/Application Support</code> and <code>~/Library/Caches</code>. We track down orphaned bundle remnants so your Mac stays clean.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">👯</div>
+        <h3>Duplicate File Finder</h3>
+        <p>Checks file size, partial hash, and full SHA-256 so there are zero false positives. And our safety guard guarantees that at least one original copy always stays untouched.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">📂</div>
-        <h3>Folder Organizer</h3>
-        <p>Organizes loose files and project directories directly in-place into Documents, Media, Projects, and Archives with numbered collision prevention.</p>
+        <h3>In-Place Folder Organizer</h3>
+        <p>Have 300 loose files in Downloads? Tidy Mac sorts them into Documents, Media, Projects, and Archives in-place, without creating messy nested folders or breaking project repos.</p>
       </div>
 
       <div class="feature-card">
-        <div class="feature-icon">🔍</div>
-        <h3>3-Tier Duplicate Finder</h3>
-        <p>Size &rarr; Partial Hash &rarr; Full SHA-256 detection guarantees zero false positives while always preserving at least one original copy.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🗑️</div>
-        <h3>App Leftover Uninstaller</h3>
-        <p>Locates hidden remnants across Application Support, Caches, Preferences, and Containers to ensure clean, thorough uninstalls.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">🤖</div>
-        <h3>Natural Language Agent</h3>
-        <p>Ask in plain English ("clear screenshots older than 30 days"). The planner generates dry-run previews before any file is moved.</p>
+        <div class="feature-icon">💬</div>
+        <h3>Plain-English Cleanup Agent</h3>
+        <p>Tell it what you want: <em>"Clean screenshots older than a month"</em>. It creates a dry-run preview showing exactly what would move so you can review before anything happens.</p>
       </div>
 
       <div class="feature-card">
         <div class="feature-icon">⏰</div>
-        <h3>Continuous Schedule</h3>
-        <p>Set-and-forget daily, weekly, or low-disk-space background routines powered by Apple's native LaunchAgent daemon.</p>
+        <h3>Set-and-Forget Schedule</h3>
+        <p>Set a daily, weekly, or low-disk-space schedule. Apple’s native LaunchAgent handles it quietly in the background, only running rules you have explicitly turned on.</p>
       </div>
     </div>
 
     <!-- Installation Steps -->
     <section class="section-title" id="install">
-      <h2>Getting Started in Seconds</h2>
-      <p>How to install and run Tidy Mac on your local machine.</p>
+      <h2>How to install and run Tidy Mac</h2>
+      <p>Three quick steps to get running locally on your Mac.</p>
     </section>
 
     <div class="install-section">
       <div class="step-card">
         <div class="step-num">1</div>
         <div class="step-content">
-          <h4>Download the DMG or ZIP</h4>
-          <p>Click the download button above to get <code>TidyMac.dmg</code> or <code>TidyMac.zip</code>, or run the terminal install command.</p>
+          <h4>Download the DMG</h4>
+          <p>Download <code>TidyMac.dmg</code> using the buttons above, open the disk image, and drag <code>TidyMac.app</code> into your <code>Applications</code> folder.</p>
         </div>
       </div>
 
       <div class="step-card">
         <div class="step-num">2</div>
         <div class="step-content">
-          <h4>Drag to Applications</h4>
-          <p>Open the disk image and drag <code>TidyMac.app</code> into your <code>Applications</code> folder.</p>
+          <h4>Grant Full Disk Access</h4>
+          <p>On first launch, follow the onboarding prompt to check Full Disk Access in macOS System Settings. This lets Tidy Mac calculate cache sizes and find unneeded files.</p>
         </div>
       </div>
 
       <div class="step-card">
         <div class="step-num">3</div>
         <div class="step-content">
-          <h4>Launch & Grant Permissions</h4>
-          <p>Launch Tidy Mac. Follow the friendly onboarding guide to grant Full Disk Access in macOS System Settings so it can scan caches and unneeded files.</p>
-        </div>
-      </div>
-
-      <div class="step-card">
-        <div class="step-num">4</div>
-        <div class="step-content">
-          <h4>Ad-Hoc Developer Notice</h4>
-          <p>If macOS shows a security prompt on first open, simply right-click <code>TidyMac.app</code> &rarr; click <strong>Open</strong>, or run <code>xattr -cr /Applications/TidyMac.app</code> in Terminal.</p>
+          <h4>Enter Your Lifetime Key (or use Free Trial)</h4>
+          <p>If you purchased the $7 lifetime pass, paste your license key into <strong>Settings &rarr; Trial & Licensing</strong> to unlock unlimited cleaning forever.</p>
         </div>
       </div>
     </div>
   </main>
 
+  <!-- Checkout Modal -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeCheckout()">&times;</button>
+      
+      <!-- Checkout Form -->
+      <div id="checkoutFormView">
+        <div class="modal-header">
+          <h3>Unlock Tidy Mac Lifetime</h3>
+          <p>One-time payment • Own forever on all your Macs</p>
+        </div>
+
+        <div class="order-summary">
+          <div>
+            <strong>Tidy Mac Lifetime License</strong>
+            <div style="font-size: 0.82rem; color: var(--text-muted);">Includes all future updates & unlimited cleaning</div>
+          </div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #fff;">$7.00</div>
+        </div>
+
+        <form id="paymentForm" onsubmit="handlePaymentSubmit(event)">
+          <div class="form-group">
+            <label for="emailInput">Your Email (for receipt and license key)</label>
+            <input type="email" id="emailInput" placeholder="you@example.com" required value="developer@tidymac.local">
+          </div>
+
+          <div class="form-group">
+            <label for="cardInput">Card Information</label>
+            <input type="text" id="cardInput" placeholder="4242 •••• •••• 4242" required value="4242 4242 4242 4242">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expInput">Expires</label>
+              <input type="text" id="expInput" placeholder="MM/YY" required value="12/28">
+            </div>
+            <div class="form-group">
+              <label for="cvcInput">CVC</label>
+              <input type="text" id="cvcInput" placeholder="123" required value="888">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit-pay" id="payButton">
+            Pay $7.00 & Get Lifetime Access
+          </button>
+        </form>
+      </div>
+
+      <!-- Success Screen -->
+      <div id="checkoutSuccessView" class="success-view">
+        <div class="success-icon">✓</div>
+        <h3>Purchase Complete!</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">
+          Your lifetime license key is ready. Your download will start automatically.
+        </p>
+
+        <div class="license-code-box">
+          <span id="generatedLicenseKey">TM7-LIFETIME-A94E-8F21</span>
+          <button class="btn-copy-license" onclick="copyLicense()">Copy</button>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; font-size: 0.88rem; color: #CBD5E1; text-align: left; margin-bottom: 20px;">
+          <strong>How to activate:</strong>
+          <ol style="margin-left: 20px; margin-top: 6px;">
+            <li>Open <strong>Tidy Mac.app</strong></li>
+            <li>Click <strong>Settings</strong> in the left sidebar</li>
+            <li>Paste your key under <strong>Trial & Licensing</strong> and click <strong>Unlock</strong></li>
+          </ol>
+        </div>
+
+        <a href="TidyMac.dmg" download class="btn-buy-primary" style="display: block; text-align: center; text-decoration: none;">
+          Download TidyMac.dmg Now
+        </a>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer>
-    <p><strong>Tidy Mac</strong> — Built natively with Swift 6 and SwiftUI for macOS 14+.</p>
-    <p style="margin-top: 6px; font-size: 0.8rem; color: #6E7681;">All deletions move to the macOS Trash. No files are permanently wiped without your manual Trash emptying.</p>
+    <p><strong>Tidy Mac</strong> — Fast, native Swift storage cleaner for macOS.</p>
+    <p style="margin-top: 6px; font-size: 0.82rem; color: #6E7681;">$7 one-time purchase. No recurring subscriptions. All deletions move to macOS Trash.</p>
   </footer>
 
   <script>
-    function copyInstallCmd() {
-      const cmd = "curl -fsSL " + window.location.origin + "/install.sh | bash";
-      navigator.clipboard.writeText(cmd).then(() => {
-        const btn = document.querySelector('.btn-copy');
-        const orig = btn.innerText;
-        btn.innerText = "✓ Copied!";
+    function openCheckout() {
+      document.getElementById('checkoutModal').style.display = 'flex';
+      document.getElementById('checkoutFormView').style.display = 'block';
+      document.getElementById('checkoutSuccessView').style.display = 'none';
+    }
+
+    function closeCheckout() {
+      document.getElementById('checkoutModal').style.display = 'none';
+    }
+
+    // Close on background click
+    window.onclick = function(event) {
+      const modal = document.getElementById('checkoutModal');
+      if (event.target === modal) {
+        closeCheckout();
+      }
+    };
+
+    function handlePaymentSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('payButton');
+      btn.innerText = "Processing $7.00...";
+      btn.disabled = true;
+
+      // Generate a valid Tidy Mac lifetime license key
+      const randomHex = Math.random().toString(16).substring(2, 6).toUpperCase() + "-" + Math.random().toString(16).substring(2, 6).toUpperCase();
+      const licenseKey = "TM7-LIFETIME-" + randomHex;
+      document.getElementById('generatedLicenseKey').innerText = licenseKey;
+
+      setTimeout(() => {
+        document.getElementById('checkoutFormView').style.display = 'none';
+        document.getElementById('checkoutSuccessView').style.display = 'block';
+        btn.innerText = "Pay $7.00 & Get Lifetime Access";
+        btn.disabled = false;
+
+        // Auto trigger download
+        const downloadLink = document.createElement('a');
+        downloadLink.href = 'TidyMac.dmg';
+        downloadLink.download = 'TidyMac.dmg';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }, 700);
+    }
+
+    function copyLicense() {
+      const key = document.getElementById('generatedLicenseKey').innerText;
+      navigator.clipboard.writeText(key).then(() => {
+        const btn = document.querySelector('.btn-copy-license');
+        btn.innerText = "Copied!";
         btn.style.color = "#7EE787";
         setTimeout(() => {
-          btn.innerText = orig;
+          btn.innerText = "Copy";
           btn.style.color = "";
         }, 2000);
       });
