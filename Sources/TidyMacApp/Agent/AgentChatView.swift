@@ -70,7 +70,7 @@ public struct AgentChatView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Image(systemName: "sparkles")
+                    Image(systemName: "wand.and.stars")
                         .font(.title2)
                         .foregroundColor(.accentColor)
                     Text("AI Agent Planner")

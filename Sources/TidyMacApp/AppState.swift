@@ -33,7 +33,7 @@ public enum AppNavigationItem: String, CaseIterable, Identifiable {
     public var systemImage: String {
         switch self {
         case .overview: return "gauge.with.needle.fill"
-        case .cleanup: return "sparkles"
+        case .cleanup: return "arrow.triangle.2.circlepath"
         case .duplicates: return "doc.on.doc.fill"
         case .apps: return "app.badge.checkmark"
         case .organize: return "folder.badge.gearshape"

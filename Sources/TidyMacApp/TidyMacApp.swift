@@ -43,7 +43,7 @@ struct TidyMacApp: App {
             }
         }
 
-        MenuBarExtra("Tidy Mac", systemImage: "sparkles") {
+        MenuBarExtra("Tidy Mac", systemImage: "folder.badge.gearshape") {
             VStack(alignment: .leading, spacing: 6) {
                 Text(localized("app.name"))
                     .font(.headline)

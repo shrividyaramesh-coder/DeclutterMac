@@ -24,7 +24,7 @@ public struct DashboardView: View {
                     Button(action: {
                         appState.selectedNavigation = .cleanup
                     }) {
-                        Label(localized("action.scan"), systemImage: "sparkles")
+                        Label(localized("action.scan"), systemImage: "magnifyingglass")
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
                     }

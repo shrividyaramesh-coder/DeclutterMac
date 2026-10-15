@@ -41,7 +41,7 @@ public struct SpacePreviewView: View {
             statItem(
                 label: localized("preview.projected_free"),
                 bytes: projectedFreeBytes,
-                systemImage: "sparkles",
+                systemImage: "arrow.triangle.2.circlepath",
                 color: .green
             )
         }

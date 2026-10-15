@@ -22,7 +22,7 @@ public struct CleanupView: View {
             // Action Bar
             HStack(spacing: 12) {
                 Button(action: startScan) {
-                    Label(appState.isScanning ? localized("action.scanning") : localized("action.scan"), systemImage: "sparkles")
+                    Label(appState.isScanning ? localized("action.scanning") : localized("action.scan"), systemImage: "magnifyingglass")
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(appState.isScanning || isCleaning)
@@ -78,7 +78,7 @@ public struct CleanupView: View {
             // Results List or Empty State
             if appState.scannedItems.isEmpty && !appState.isScanning {
                 VStack(spacing: 16) {
-                    Image(systemName: "sparkles")
+                    Image(systemName: "arrow.triangle.2.circlepath")
                         .font(.system(size: 48))
                         .foregroundStyle(.tint)
                     Text("No Scanned Items Yet")

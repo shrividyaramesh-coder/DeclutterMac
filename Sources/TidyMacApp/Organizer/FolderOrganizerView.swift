@@ -132,7 +132,7 @@ public struct FolderOrganizerView: View {
                 .cornerRadius(8)
             } else {
                 HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
+                    Image(systemName: "folder.badge.plus")
                         .foregroundColor(.accentColor)
                     let remaining = max(0, 2 - folderSortsUsed)
                     Text("Free: \(remaining) of 2 sorts left")

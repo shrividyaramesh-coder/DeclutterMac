@@ -18,7 +18,7 @@ public struct OnboardingView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Image(systemName: "sparkles")
+                Image(systemName: "folder.badge.gearshape")
                     .font(.system(size: 28))
                     .foregroundStyle(.tint)
                 VStack(alignment: .leading, spacing: 2) {
