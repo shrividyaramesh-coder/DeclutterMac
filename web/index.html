@@ -1014,10 +1014,10 @@
   </footer>
 
   <script>
+    const DODO_CHECKOUT_URL = "https://test.checkout.dodopayments.com/buy/pdt_0NqYeAXSL10O7kbZJ4FQT?quantity=1";
+
     function openCheckout() {
-      document.getElementById('checkoutModal').style.display = 'flex';
-      document.getElementById('checkoutFormView').style.display = 'block';
-      document.getElementById('checkoutSuccessView').style.display = 'none';
+      window.open(DODO_CHECKOUT_URL, '_blank');
     }
 
     function closeCheckout() {
