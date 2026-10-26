@@ -153,7 +153,13 @@ public struct DashboardView: View {
     private func categoryCard(category: ScanCategory) -> some View {
         let bytes = appState.storageSummary.categoryBreakdown[category] ?? 0
         return Button(action: {
-            appState.selectedNavigation = .cleanup
+            if category == .duplicates {
+                appState.selectedNavigation = .duplicates
+            } else if category == .appLeftovers {
+                appState.selectedNavigation = .apps
+            } else {
+                appState.selectedNavigation = .cleanup
+            }
         }) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {

@@ -80,8 +80,31 @@ public struct PathValidator: Sendable {
         }
     }
 
+    /// Precomputes canonical allowed roots for efficient repetitive path checks.
+    public static func canonicalizeRoots(_ roots: [URL]) -> [String] {
+        return roots.map {
+            (($0.resolvingSymlinksInPath().path(percentEncoded: false)) as NSString).standardizingPath
+        }
+    }
+
+    /// Fast-path validation using precomputed canonical roots.
+    public static func isPathAllowedFast(_ url: URL, precomputedCanonicalRoots: [String]?) -> Bool {
+        do {
+            try validatePath(url, precomputedCanonicalRoots: precomputedCanonicalRoots)
+            return true
+        } catch {
+            return false
+        }
+    }
+
     /// Validates a path and throws a descriptive `SecurityError` if it violates any invariant.
     public static func validatePath(_ url: URL, allowedRoots: [URL]? = nil) throws {
+        let canonicalRoots = allowedRoots.map { canonicalizeRoots($0) }
+        try validatePath(url, precomputedCanonicalRoots: canonicalRoots)
+    }
+
+    /// Validates a path against precomputed canonical roots.
+    public static func validatePath(_ url: URL, precomputedCanonicalRoots: [String]?) throws {
         let rawPath = url.path(percentEncoded: false)
         guard !rawPath.isEmpty else {
             throw SecurityError.emptyPath
@@ -114,12 +137,11 @@ public struct PathValidator: Sendable {
                 throw SecurityError.protectedPath(canonicalPath)
             }
             // If it is in per-user temp, it is ONLY permitted if explicitly granted via allowedRoots
-            guard let allowedRoots = allowedRoots, !allowedRoots.isEmpty else {
+            guard let precomputedCanonicalRoots = precomputedCanonicalRoots, !precomputedCanonicalRoots.isEmpty else {
                 throw SecurityError.protectedPath(canonicalPath)
             }
-            let isCoveredByAllowedTemp = allowedRoots.contains { root in
-                let canonicalRoot = (root.resolvingSymlinksInPath().path(percentEncoded: false) as NSString).standardizingPath
-                return canonicalPath == canonicalRoot || canonicalPath.hasPrefix(canonicalRoot + "/")
+            let isCoveredByAllowedTemp = precomputedCanonicalRoots.contains { canonicalRoot in
+                canonicalPath == canonicalRoot || canonicalPath.hasPrefix(canonicalRoot + "/")
             }
             if !isCoveredByAllowedTemp {
                 throw SecurityError.protectedPath(canonicalPath)
@@ -155,13 +177,9 @@ public struct PathValidator: Sendable {
             return false
         }()
 
-        // 7. Allowed Roots containment check (if allowedRoots is specified)
-        if let allowedRoots = allowedRoots, !allowedRoots.isEmpty {
-            let canonicalAllowed = allowedRoots.map {
-                (($0.resolvingSymlinksInPath().path(percentEncoded: false)) as NSString).standardizingPath
-            }
-
-            let isWithinAnyRoot = canonicalAllowed.contains { root in
+        // 7. Allowed Roots containment check (if precomputedCanonicalRoots is specified)
+        if let precomputedCanonicalRoots = precomputedCanonicalRoots, !precomputedCanonicalRoots.isEmpty {
+            let isWithinAnyRoot = precomputedCanonicalRoots.contains { root in
                 canonicalPath == root || canonicalPath.hasPrefix(root + "/")
             }
 

@@ -4,7 +4,7 @@ import Foundation
 public enum LocalizedStrings {
     private static let translations: [AppLanguage: [String: String]] = [
         .en: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "Declutter your Mac with zero effort.",
             "nav.overview": "Overview",
             "nav.cleanup": "Cleanup",
@@ -36,7 +36,7 @@ public enum LocalizedStrings {
             "risk.manual": "Manual",
             "risk.safe.desc": "Safe to remove. Temporary caches, logs, or redundant installers.",
             "risk.review.desc": "Review recommended. May contain personal documents, archives, or screenshots.",
-            "risk.manual.desc": "Information only. Protected or sensitive item that Tidy Mac will never remove.",
+            "risk.manual.desc": "Information only. Protected or sensitive item that Declutter Mac will never remove.",
             
             "preview.current_free": "Current Free Space",
             "preview.selected_size": "Selected for Cleanup",
@@ -50,7 +50,7 @@ public enum LocalizedStrings {
             "privacy.statement": "All file scanning and duplicate detection happens 100% locally on your Mac. When using the AI cleanup agent, only file metadata (file names, sizes, dates) is evaluated. File contents are never opened, read, or transmitted to any server.",
             
             "permission.fda_title": "Full Disk Access Required",
-            "permission.fda_desc": "To discover system caches and unused application leftovers, Tidy Mac needs Full Disk Access. Your files never leave your Mac.",
+            "permission.fda_desc": "To discover system caches and unused application leftovers, Declutter Mac needs Full Disk Access. Your files never leave your Mac.",
             "permission.open_settings": "Open System Settings",
             
             "agent.placeholder": "e.g., 'Delete screenshots older than 30 days' or 'Sort Downloads'",
@@ -61,7 +61,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "Free Allowance: %@ of 2 GB used"
         ],
         .fr: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "Désencombrez votre Mac sans aucun effort.",
             "nav.overview": "Aperçu",
             "nav.cleanup": "Nettoyage",
@@ -108,7 +108,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "Quota gratuit : %@ sur 2 Go utilisés"
         ],
         .de: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "Entrümpeln Sie Ihren Mac ohne Mühe.",
             "nav.overview": "Übersicht",
             "nav.cleanup": "Bereinigung",
@@ -155,7 +155,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "Kostenloses Kontingent: %@ von 2 GB belegt"
         ],
         .ja: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "手間をかけずにMacをクリーンアップ。",
             "nav.overview": "概要",
             "nav.cleanup": "クリーンアップ",
@@ -202,7 +202,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "無料枠: 2 GB中 %@ 使用済み"
         ],
         .ko: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "손쉬운 Mac 정리와 공간 확보.",
             "nav.overview": "개요",
             "nav.cleanup": "정리",
@@ -249,7 +249,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "무료 제공량: 2 GB 중 %@ 사용됨"
         ],
         .zhHans: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "零负担，让您的 Mac 焕然一新。",
             "nav.overview": "概览",
             "nav.cleanup": "清理",
@@ -296,7 +296,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "免费额度：已使用 %@ / 2 GB"
         ],
         .zhHant: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "毫不費力，讓您的 Mac 井井有條。",
             "nav.overview": "概覽",
             "nav.cleanup": "清理",
@@ -343,7 +343,7 @@ public enum LocalizedStrings {
             "trial.free_allowance": "免費配額：已使用 %@ / 2 GB"
         ],
         .es: [
-            "app.name": "Tidy Mac",
+            "app.name": "Declutter Mac",
             "app.tagline": "Despeja tu Mac sin ningún esfuerzo.",
             "nav.overview": "Resumen",
             "nav.cleanup": "Limpieza",

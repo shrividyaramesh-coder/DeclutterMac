@@ -2,7 +2,7 @@ import Foundation
 import TidyMacCore
 
 print("=========================================")
-print("🚀 Running Tidy Mac Automated Test Suite")
+print("🚀 Running Declutter Mac Automated Test Suite")
 print("=========================================")
 
 runModelTests()

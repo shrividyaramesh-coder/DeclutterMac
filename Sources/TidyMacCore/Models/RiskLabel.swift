@@ -39,7 +39,7 @@ public enum RiskLabel: String, Sendable, Codable, CaseIterable, Identifiable {
         case .review:
             return "Review recommended. May contain personal documents, archives, or screenshots."
         case .manual:
-            return "Visible for information only. Protected or sensitive item that Tidy Mac will never automatically remove."
+            return "Visible for information only. Protected or sensitive item that Declutter Mac will never automatically remove."
         }
     }
 

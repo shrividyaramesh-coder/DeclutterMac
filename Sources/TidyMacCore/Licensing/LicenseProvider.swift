@@ -8,9 +8,12 @@ public enum LicenseStatus: Equatable, Sendable {
     
     public var isUnlimited: Bool {
         switch self {
-        case .unlocked: return true
-        case .trial: return true
-        case .freeTier(let cleaned, let allowance): return cleaned < allowance
+        case .unlocked:
+            return true
+        case .trial(let days):
+            return days > 0
+        case .freeTier(let cleaned, let allowance):
+            return cleaned < allowance
         }
     }
 }
@@ -66,16 +69,11 @@ public actor LocalLicenseProvider: LicenseProvider {
         if let key = lifetimeKey, !key.isEmpty {
             return .unlocked(licenseKey: key)
         }
-        
-        // Check 15-day trial
-        let daysElapsed = Calendar.current.dateComponents([.day], from: trialStartDate, to: Date()).day ?? 0
-        let daysRemaining = max(0, Self.trialDurationDays - daysElapsed)
-        
+        let elapsed = Calendar.current.dateComponents([.day], from: trialStartDate, to: Date()).day ?? 0
+        let daysRemaining = max(0, Self.trialDurationDays - elapsed)
         if daysRemaining > 0 {
             return .trial(daysRemaining: daysRemaining)
         }
-        
-        // Revert to free tier allowance
         return .freeTier(bytesCleaned: cleanedBytes, allowanceBytes: Self.defaultFreeAllowanceBytes)
     }
     

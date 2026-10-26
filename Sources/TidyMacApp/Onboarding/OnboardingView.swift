@@ -103,7 +103,7 @@ public struct OnboardingView: View {
                 .font(.title3)
                 .bold()
             
-            Text("macOS isolates application sandboxes to protect user security. To scan system caches, application leftovers, and duplicate files, Tidy Mac works best with Full Disk Access.")
+            Text("macOS isolates application sandboxes to protect user security. To scan system caches, application leftovers, and duplicate files, Declutter Mac works best with Full Disk Access.")
                 .font(.body)
                 .foregroundStyle(.secondary)
             
@@ -117,7 +117,7 @@ public struct OnboardingView: View {
                     Text(hasFullDiskAccess ? "Full Disk Access Granted" : "Limited Access (Sandboxed Mode)")
                         .font(.headline)
                         .foregroundStyle(hasFullDiskAccess ? .green : .primary)
-                    Text(hasFullDiskAccess ? "Tidy Mac is fully authorized to inspect system caches, developer tools, and app leftovers." : "Tidy Mac can still manage specific user folders, but cannot scan deep caches or leftovers without Full Disk Access.")
+                    Text(hasFullDiskAccess ? "Declutter Mac is fully authorized to inspect system caches, developer tools, and app leftovers." : "Declutter Mac can still manage specific user folders, but cannot scan deep caches or leftovers without Full Disk Access.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -160,7 +160,7 @@ public struct OnboardingView: View {
                 .font(.title3)
                 .bold()
             
-            Text("Select the default folders you would like Tidy Mac to monitor for junk, duplicates, and organization. Tidy Mac creates security-scoped bookmarks to remember your choices.")
+            Text("Select the default folders you would like Declutter Mac to monitor for junk, duplicates, and organization. Declutter Mac creates security-scoped bookmarks to remember your choices.")
                 .font(.body)
                 .foregroundStyle(.secondary)
             
@@ -246,7 +246,7 @@ public struct OnboardingView: View {
                 .font(.title3)
                 .bold()
             
-            Text("Tidy Mac is engineered with non-negotiable safety guardrails to ensure zero accidental data loss.")
+            Text("Declutter Mac is engineered with non-negotiable safety guardrails to ensure zero accidental data loss.")
                 .font(.body)
                 .foregroundStyle(.secondary)
             

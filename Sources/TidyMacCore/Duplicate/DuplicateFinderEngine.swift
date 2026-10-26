@@ -68,6 +68,11 @@ public actor DuplicateFinderEngine {
 
     public init() {}
 
+    private static let blackHoleDirectoryNames: Set<String> = [
+        "node_modules", ".git", "Pods", ".build", "DerivedData",
+        ".gradle", ".cargo", "venv", ".venv", "vendor"
+    ]
+
     /// Executes the 3-tier duplicate detection pipeline across specified folders.
     public func findDuplicates(
         folders: [URL],
@@ -76,6 +81,7 @@ public actor DuplicateFinderEngine {
         // Step 1: Collect all regular files and group by exact file size
         var filesBySize: [Int64: [URL]] = [:]
         let fileManager = FileManager.default
+        let canonicalRoots = PathValidator.canonicalizeRoots(folders)
         let resourceKeys: Set<URLResourceKey> = [
             .fileSizeKey,
             .isDirectoryKey,
@@ -86,22 +92,35 @@ public actor DuplicateFinderEngine {
         ]
 
         for folder in folders {
+            // Never scan system caches or developer build trees for duplicates
+            if folder.path.contains("Library/Caches") || folder.path.contains("Library/Developer") {
+                continue
+            }
             guard fileManager.fileExists(atPath: folder.path) else { continue }
             guard let enumerator = fileManager.enumerator(
                 at: folder,
                 includingPropertiesForKeys: Array(resourceKeys),
-                options: [.skipsPackageDescendants],
+                options: [.skipsPackageDescendants, .skipsHiddenFiles],
                 errorHandler: { _, _ in true }
             ) else { continue }
 
             while let fileURL = enumerator.nextObject() as? URL {
                 if Task.isCancelled { return [] }
 
-                guard PathValidator.isPathAllowed(fileURL, allowedRoots: folders) else { continue }
+                guard PathValidator.isPathAllowedFast(fileURL, precomputedCanonicalRoots: canonicalRoots) else { continue }
                 guard let values = try? fileURL.resourceValues(forKeys: resourceKeys) else { continue }
 
-                // Skip directories, packages, symlinks, and dataless cloud placeholders
-                if values.isDirectory == true || values.isPackage == true || values.isSymbolicLink == true { continue }
+                // Prune black-hole dependency directories and package bundles
+                if values.isDirectory == true {
+                    let name = fileURL.lastPathComponent
+                    if Self.blackHoleDirectoryNames.contains(name) || name.hasSuffix(".photoslibrary") {
+                        enumerator.skipDescendants()
+                    }
+                    continue
+                }
+
+                // Skip packages, symlinks, and dataless cloud placeholders
+                if values.isPackage == true || values.isSymbolicLink == true { continue }
                 if CloudFolderDetector.isDatalessCloudPlaceholder(fileURL) { continue }
 
                 let size = Int64(values.fileSize ?? 0)

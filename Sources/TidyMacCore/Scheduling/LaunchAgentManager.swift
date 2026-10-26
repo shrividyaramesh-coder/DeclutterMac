@@ -5,7 +5,7 @@ import ServiceManagement
 public final class LaunchAgentManager: Sendable {
     public static let shared = LaunchAgentManager()
     
-    public static let agentLabel = "com.tidymac.cleanup"
+    public static let agentLabel = "com.decluttermac.cleanup"
     public static let plistFileName = "\(agentLabel).plist"
     
     private init() {}
@@ -16,15 +16,15 @@ public final class LaunchAgentManager: Sendable {
             .appendingPathComponent("Library/LaunchAgents")
     }
     
-    /// Target file URL for the Tidy Mac LaunchAgent plist.
+    /// Target file URL for the Declutter Mac LaunchAgent plist.
     public var plistFileURL: URL {
         launchAgentsDirectory.appendingPathComponent(Self.plistFileName)
     }
     
-    /// Path to Tidy Mac log directory.
+    /// Path to Declutter Mac log directory.
     public var logsDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Library/Logs/TidyMac")
+            .appendingPathComponent("Library/Logs/DeclutterMac")
     }
     
     /// Checks if the LaunchAgent plist is currently installed on disk.

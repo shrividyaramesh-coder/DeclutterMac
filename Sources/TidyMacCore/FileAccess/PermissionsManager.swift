@@ -1,7 +1,7 @@
 import Foundation
 import AppKit
 
-/// Standard folders offered during onboarding for Tidy Mac management.
+/// Standard folders offered during onboarding for Declutter Mac management.
 public enum ManagedFolderType: String, Sendable, Codable, CaseIterable, Identifiable {
     case downloads
     case documents

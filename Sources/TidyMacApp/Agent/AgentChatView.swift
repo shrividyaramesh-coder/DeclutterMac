@@ -112,7 +112,7 @@ public struct AgentChatView: View {
     
     private var inputSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Tell Tidy Mac what you want to clean or organize:")
+            Text("Tell Declutter Mac what you want to clean or organize:")
                 .font(.headline)
             
             HStack(spacing: 12) {

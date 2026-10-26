@@ -57,7 +57,7 @@ public struct AnthropicClient: LLMClient {
         urlRequest.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         
         let systemPrompt = """
-        You are Tidy Mac's cleanup planner. Analyze the metadata and produce a JSON response adhering to this schema:
+        You are Declutter Mac's cleanup planner. Analyze the metadata and produce a JSON response adhering to this schema:
         {
           "userGoal": string,
           "summary": string,
@@ -136,7 +136,7 @@ public struct OpenAIClient: LLMClient {
         urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         
         let systemPrompt = """
-        You are Tidy Mac's cleanup planner. Analyze metadata and output valid JSON conforming to the CleaningPlan schema:
+        You are Declutter Mac's cleanup planner. Analyze metadata and output valid JSON conforming to the CleaningPlan schema:
         {
           "userGoal": string,
           "summary": string,

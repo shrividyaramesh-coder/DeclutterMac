@@ -207,4 +207,47 @@ func runOrganizerTests() async {
     let deepGroups = await engine.analyzeFolder(targetFolder: nestedDir, includeSubfolders: true, strategy: .byCategory)
     let deepTotalMoves = deepGroups.reduce(0) { $0 + $1.moves.count }
     expect(deepTotalMoves >= 2, "Deep scan found unorganized files in nested subfolders to relocate")
+
+    // 10. Folder Sorting Allowance Verification (2 Free Folders, Then Paywall, Then $3.99 Lifetime Unlock)
+    let licenseProvider = LocalLicenseProvider.shared
+    await licenseProvider.reset()
+
+    // Sort 0: Authorized (2 free left)
+    let canSort0 = await licenseProvider.canSortFolder()
+    expect(canSort0, "Initial state allows sorting first folder")
+    expectEqual(await licenseProvider.folderSortsCount(), 0, "Initial sort count is 0")
+
+    // Perform Sort 1: Authorized (1 free left)
+    await licenseProvider.recordFolderSort()
+    let canSort1 = await licenseProvider.canSortFolder()
+    expect(canSort1, "Allows sorting second folder")
+    expectEqual(await licenseProvider.folderSortsCount(), 1, "Sort count is 1")
+
+    // Perform Sort 2: Paywall threshold reached (0 free left)
+    await licenseProvider.recordFolderSort()
+    let canSort2 = await licenseProvider.canSortFolder()
+    expect(!canSort2, "Third sort blocked by paywall after 2 free folder sorts")
+    expectEqual(await licenseProvider.folderSortsCount(), 2, "Sort count is 2")
+
+    // Attempt Unlock with empty key -> rejected
+    let failedUnlock = await licenseProvider.unlockLifetime(key: "   ")
+    expect(!failedUnlock, "Empty license key rejected")
+    let stillBlocked = await licenseProvider.canSortFolder()
+    expect(!stillBlocked, "Still blocked after failed unlock")
+
+    // Unlock with valid $3.99 lifetime key
+    let successUnlock = await licenseProvider.unlockLifetime(key: "DM-LIFETIME-399-A1B2")
+    expect(successUnlock, "$3.99 lifetime key successfully accepted")
+    let canSortUnlocked = await licenseProvider.canSortFolder()
+    expect(canSortUnlocked, "Can sort unlimited folders after lifetime unlock")
+    let status = await licenseProvider.currentStatus()
+    expectEqual(status, .unlocked(licenseKey: "DM-LIFETIME-399-A1B2"), "License status reflects unlocked state")
+
+    // Perform Sort 3 & 4 (Unlimited access after unlock)
+    await licenseProvider.recordFolderSort()
+    expectEqual(await licenseProvider.folderSortsCount(), 3, "Sort count is 3")
+    expect(await licenseProvider.canSortFolder(), "Continues allowing unlimited sorting after lifetime unlock")
+
+    // Reset back
+    await licenseProvider.reset()
 }

@@ -5,7 +5,7 @@ import Security
 public struct KeychainService: Sendable {
     public static let shared = KeychainService()
     
-    private let serviceName = "com.tidymac.app.keys"
+    private let serviceName = "com.decluttermac.app.keys"
     
     public init() {}
     

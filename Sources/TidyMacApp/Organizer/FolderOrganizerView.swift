@@ -130,6 +130,22 @@ public struct FolderOrganizerView: View {
                 .padding(.vertical, 6)
                 .background(Color.green.opacity(0.12))
                 .cornerRadius(8)
+            } else if folderSortsUsed >= 2 {
+                Button(action: { showPaywallSheet = true }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "lock.fill")
+                            .foregroundColor(.orange)
+                        Text("2 of 2 Free Sorts Used • Unlock ($3.99)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.orange.opacity(0.12))
+                    .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "folder.badge.plus")
@@ -846,7 +862,7 @@ public struct FolderOrganizerView: View {
                 Text("Free Folder Sorts Used")
                     .font(.title2)
                     .fontWeight(.bold)
-                Text("You have organized your 2 free folders! Unlock lifetime unlimited folder sorting and Mac cleaning for just $7.")
+                Text("You have organized your 2 free folders! Unlock lifetime unlimited folder sorting and Mac cleaning for just $3.99.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -856,7 +872,7 @@ public struct FolderOrganizerView: View {
             VStack(spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Tidy Mac Lifetime License")
+                        Text("Declutter Mac Lifetime License")
                             .font(.body)
                             .fontWeight(.semibold)
                         Text("Unlimited folder sorting & cleaning on all your Macs")
@@ -864,7 +880,7 @@ public struct FolderOrganizerView: View {
                             .foregroundColor(.secondary)
                     }
                     Spacer()
-                    Text("$7.00")
+                    Text("$3.99")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.accentColor)
@@ -874,7 +890,7 @@ public struct FolderOrganizerView: View {
                 .cornerRadius(10)
                 
                 HStack(spacing: 8) {
-                    TextField("Enter $7 Lifetime License Key", text: $paywallKeyInput)
+                    TextField("Enter $3.99 Lifetime License Key", text: $paywallKeyInput)
                         .textFieldStyle(.roundedBorder)
                     
                     Button("Unlock") {
@@ -903,13 +919,13 @@ public struct FolderOrganizerView: View {
                 }
                 
                 Button(action: {
-                    if let url = URL(string: "http://localhost:8000") {
+                    if let url = URL(string: "https://www.decluttermac.com#pricing") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "cart.fill")
-                        Text("Purchase $7 Lifetime License Online")
+                        Text("Purchase $3.99 Lifetime License Online")
                     }
                     .font(.subheadline)
                     .fontWeight(.medium)

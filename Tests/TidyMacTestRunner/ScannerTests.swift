@@ -114,4 +114,23 @@ func runScannerTests() async {
     cancelTask.cancel()
     _ = await cancelTask.result
     expect(cancelTask.isCancelled, "Scanner handles Task cancellation gracefully")
+
+    // 5. Performance Benchmark on Real System Caches
+    let realCaches = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Caches")
+    if FileManager.default.fileExists(atPath: realCaches.path) {
+        let benchStart = Date()
+        let benchStream = await scanner.scan(folders: [realCaches], includeDeveloperCaches: false)
+        var realItemsCount = 0
+        var realBytesFound: Int64 = 0
+        for await event in benchStream {
+            if case .itemDiscovered(let item) = event {
+                realItemsCount += 1
+                realBytesFound += item.fileSize
+            }
+        }
+        let benchDuration = Date().timeIntervalSince(benchStart)
+        print("  ⚡️ Real ~/Library/Caches scan completed in \(String(format: "%.2f", benchDuration))s (Discovered \(realItemsCount) bundles, \(String(format: "%.2f", Double(realBytesFound) / 1_000_000_000)) GB)")
+        expect(benchDuration < 10.0, "Scan of entire real ~/Library/Caches (210k+ files) must complete in under 10.0 seconds (actual: \(String(format: "%.2f", benchDuration))s)")
+        expect(realItemsCount > 0, "Discovered active real cache items")
+    }
 }

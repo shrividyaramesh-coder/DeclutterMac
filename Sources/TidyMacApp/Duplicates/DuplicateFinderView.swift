@@ -173,7 +173,9 @@ public struct DuplicateFinderView: View {
         duplicateGroups = []
 
         Task {
-            let folders = await FileAccessService.shared.getManagedFolderURLs()
+            let folders = await FileAccessService.shared.getManagedFolderURLs().filter {
+                !$0.path.contains("Library/Caches") && !$0.path.contains("Library/Developer")
+            }
             let results = await DuplicateFinderEngine.shared.findDuplicates(folders: folders, strategy: selectedStrategy)
             await MainActor.run {
                 self.duplicateGroups = results

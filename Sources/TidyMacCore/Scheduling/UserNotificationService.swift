@@ -21,7 +21,7 @@ public struct UserNotificationService: Sendable {
         guard filesCleaned > 0 else { return }
         
         let content = UNMutableNotificationContent()
-        content.title = "Tidy Mac Scheduled Cleanup Complete"
+        content.title = "Declutter Mac Scheduled Cleanup Complete"
         let formattedSize = ByteCountFormatter.string(fromByteCount: bytesReclaimed, countStyle: .file)
         content.body = "Reclaimed \(formattedSize) across \(filesCleaned) files. Tap to view details or undo."
         content.sound = .default

@@ -23,3 +23,6 @@ Icon
 .env
 web/*.dmg
 web/*.zip
+.vercel/
+web/.vercel/
+

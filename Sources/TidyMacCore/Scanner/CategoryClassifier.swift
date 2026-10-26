@@ -38,11 +38,12 @@ public struct CategoryClassifier: Sendable {
         }
 
         // 3. Browser caches
-        if path.contains("Library/Caches/Google/Chrome") ||
+        if path.contains("Library/Caches/Google") ||
            path.contains("Library/Caches/com.apple.Safari") ||
            path.contains("Library/Caches/company.thebrowser.Browser") || // Arc
            path.contains("Library/Caches/org.mozilla.firefox") ||
            path.contains("Library/Caches/com.brave.Browser") ||
+           path.contains("Library/Caches/BraveSoftware") ||
            path.contains("Library/Caches/com.microsoft.edgemac") {
             return .browserCaches
         }
@@ -52,7 +53,8 @@ public struct CategoryClassifier: Sendable {
            path.contains("Library/Caches/ru.keepcoder.Telegram") ||
            path.contains("Library/Caches/net.whatsapp.WhatsApp") ||
            path.contains("Library/Caches/com.hnc.Discord") ||
-           path.contains("Library/Caches/com.microsoft.teams2") {
+           path.contains("Library/Caches/com.microsoft.teams2") ||
+           path.contains("Library/Caches/ms-teams") {
             return .messagingMedia
         }
 

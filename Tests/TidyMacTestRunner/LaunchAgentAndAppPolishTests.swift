@@ -10,8 +10,8 @@ func runLaunchAgentAndAppPolishTests() {
     // 1. Plist Generation for Daily Interval
     let dailyPlist = LaunchAgentManager.shared.generatePlistContent(executableURL: dummyExe, frequency: .daily)
     expect(
-        dailyPlist.contains("<string>com.tidymac.cleanup</string>"),
-        "LaunchAgent plist must declare label com.tidymac.cleanup"
+        dailyPlist.contains("<string>com.decluttermac.cleanup</string>"),
+        "LaunchAgent plist must declare label com.decluttermac.cleanup"
     )
     expect(
         dailyPlist.contains("<string>--scheduled-run</string>"),

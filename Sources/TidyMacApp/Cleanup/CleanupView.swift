@@ -146,24 +146,49 @@ public struct CleanupView: View {
             let managedFolders = await FileAccessService.shared.getManagedFolderURLs()
             let stream = await StorageScanner.shared.scan(folders: managedFolders, includeDeveloperCaches: true)
 
+            var buffer: [FileItem] = []
+            var lastFlushTime = Date()
+            var lastStatusTime = Date()
+
             for await event in stream {
                 switch event {
                 case .progress(let scanned, _, let currentPath):
-                    await MainActor.run {
-                        self.scanStatusText = "Scanning (\(scanned) items): \(currentPath)"
+                    let now = Date()
+                    if now.timeIntervalSince(lastStatusTime) >= 0.1 {
+                        lastStatusTime = now
+                        await MainActor.run {
+                            self.scanStatusText = "Scanning (\(scanned) items): \(currentPath)"
+                        }
                     }
                 case .itemDiscovered(let item):
-                    await MainActor.run {
-                        self.appState.scannedItems.append(item)
+                    buffer.append(item)
+                    let now = Date()
+                    if buffer.count >= 25 || now.timeIntervalSince(lastFlushTime) >= 0.1 {
+                        let toFlush = buffer
+                        buffer.removeAll(keepingCapacity: true)
+                        lastFlushTime = now
+                        await MainActor.run {
+                            self.appState.scannedItems.append(contentsOf: toFlush)
+                        }
                     }
                 case .completed(_, let totalBytes):
+                    let remaining = buffer
+                    buffer.removeAll()
                     await MainActor.run {
+                        if !remaining.isEmpty {
+                            self.appState.scannedItems.append(contentsOf: remaining)
+                        }
                         self.appState.isScanning = false
                         self.scanStatusText = ""
                         self.recalculateStorageSummary(reclaimableBytes: Int64(totalBytes))
                     }
                 case .cancelled:
+                    let remaining = buffer
+                    buffer.removeAll()
                     await MainActor.run {
+                        if !remaining.isEmpty {
+                            self.appState.scannedItems.append(contentsOf: remaining)
+                        }
                         self.appState.isScanning = false
                         self.scanStatusText = "Scan cancelled."
                     }

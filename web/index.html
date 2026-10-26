@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tidy Mac — A Mac cleaner that doesn't feel like malware</title>
+  <title>Declutter Mac — A Mac cleaner that doesn't feel like malware</title>
   <link rel="icon" type="image/png" href="app-icon.png">
   <style>
     :root {
@@ -106,9 +106,9 @@
     }
 
     .btn-nav-buy {
-      background: var(--primary);
+      background: var(--success);
       color: #fff !important;
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 8px;
       font-weight: 600;
       font-size: 0.9rem;
@@ -116,11 +116,14 @@
       transition: all 0.2s;
       cursor: pointer;
       border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .btn-nav-buy:hover {
-      background: var(--primary-hover);
-      box-shadow: 0 0 16px var(--primary-glow);
+      background: #28B946;
+      box-shadow: 0 0 16px rgba(48, 209, 88, 0.4);
     }
 
     /* Hero */
@@ -713,15 +716,15 @@
   <header>
     <div class="nav-container">
       <a href="#" class="brand">
-        <img src="app-icon.png" alt="Tidy Mac Icon" class="brand-icon">
-        <span>Tidy Mac</span>
+        <img src="app-icon.png" alt="Declutter Mac Icon" class="brand-icon">
+        <span>Declutter Mac</span>
       </a>
       <ul class="nav-links">
         <li><a href="#features">What it cleans</a></li>
-        <li><a href="#pricing">Pricing</a></li>
-        <li><a href="#safety">Safety</a></li>
-        <li><a href="#install">Install</a></li>
-        <li><button onclick="openCheckout()" class="btn-nav-buy">Buy Lifetime ($7)</button></li>
+        <li><a href="#pricing">Pricing ($3.99)</a></li>
+        <li><a href="#safety">Safety Invariants</a></li>
+        <li><a href="#install">Install Guide</a></li>
+        <li><button onclick="openCheckout()" class="btn-nav-buy">Buy Lifetime ($3.99)</button></li>
       </ul>
     </div>
   </header>
@@ -731,17 +734,17 @@
     <section class="hero">
       <div class="hero-badge">
         <span class="pulse"></span>
-        <span>2 Folders Free • Then $7 for Lifetime Access</span>
+        <span>2 Folders Free • Then $3.99 for Lifetime Access</span>
       </div>
       <br>
-      <img src="app-icon.png" alt="Tidy Mac" class="app-icon-large">
+      <img src="app-icon.png" alt="Declutter Mac" class="app-icon-large">
       <h1>A Mac cleaner that doesn't feel like malware.</h1>
       <p class="hero-subtitle">
-        Sort your first 2 messy folders completely free. See how clean your Mac gets, then unlock lifetime unlimited folder organization, disk cleanup, and duplicate removal for just $7.
+        Sort your first 2 messy folders completely free. See how clean your Mac gets, then unlock lifetime unlimited folder organization, disk cleanup, and duplicate removal for just $3.99.
       </p>
 
       <div class="download-group">
-        <a href="TidyMac.dmg" download class="btn-buy-primary" style="background: linear-gradient(135deg, #30D158 0%, #15803D 100%); box-shadow: 0 8px 24px rgba(48, 209, 88, 0.3);">
+        <a href="DeclutterMac.dmg" download class="btn-buy-primary" style="background: linear-gradient(135deg, #30D158 0%, #15803D 100%); box-shadow: 0 8px 24px rgba(48, 209, 88, 0.35);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
@@ -750,36 +753,46 @@
           Download Free (Sort 2 Folders)
         </a>
 
-        <button onclick="openCheckout()" class="btn-buy-primary">
+        <button onclick="openCheckout()" class="btn-buy-primary" style="background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
             <line x1="1" y1="10" x2="23" y2="10"></line>
           </svg>
-          Buy Lifetime Pass — $7
+          Buy Lifetime Pass — $3.99
         </button>
       </div>
 
       <div class="meta-spec">
         <span>✓ 2 folder sorts 100% free</span>
         <span>•</span>
-        <span>$7 one-time lifetime unlock</span>
+        <span>$3.99 one-time lifetime unlock</span>
         <span>•</span>
         <span>Universal (Apple Silicon & Intel)</span>
+      </div>
+
+      <!-- Quick Terminal Install Box -->
+      <div style="max-width: 580px; margin: 28px auto 0; background: var(--code-bg); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 0.88rem; color: #8BE9FD; text-align: left;">
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 12px;">
+          <span style="color: var(--text-muted);">$</span> curl -fsSL https://decluttermac.com/install.sh | bash
+        </span>
+        <button onclick="copyInstallCmd()" id="btnCopyInstall" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 0.78rem; cursor: pointer; white-space: nowrap;">
+          Copy
+        </button>
       </div>
     </section>
 
     <!-- Pricing Card Spotlight -->
     <section class="pricing-section" id="pricing">
       <div class="pricing-card">
-        <div class="pricing-pill">First 2 Folders Free • Then $7 Once</div>
-        <h2>Sort 2 folders free. Then $7 forever.</h2>
+        <div class="pricing-pill">First 2 Folders Free • Then $3.99 Once</div>
+        <h2>Sort 2 folders free. Then $3.99 forever.</h2>
         <p class="pricing-pitch">
-          Try Tidy Mac on your messiest folders first. When you're ready for unlimited sorting, background schedules, and deep storage cleaning, unlock lifetime access for a single $7 payment.
+          Try Declutter Mac on your messiest folders first. When you're ready for unlimited sorting, background schedules, and deep storage cleaning, unlock lifetime access for a single $3.99 payment.
         </p>
 
         <div class="price-tag">
           <span class="price-currency">$</span>
-          <span class="price-amount">7</span>
+          <span class="price-amount">3.99</span>
           <span class="price-cadence">one-time</span>
         </div>
 
@@ -790,7 +803,7 @@
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <strong>Unlimited folder sorting</strong> across all your personal Macs after $7 unlock
+            <strong>Unlimited folder sorting</strong> across all your personal Macs after $3.99 unlock
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -802,17 +815,18 @@
           </li>
           <li>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <strong>Zero risk:</strong> 100% Trash-only deletion + instant Undo Journal
+            <strong>Zero recurring subscriptions:</strong> Pay $3.99 once, own forever
           </li>
         </ul>
 
-        <button onclick="openCheckout()" class="btn-buy-primary" style="width: 100%; max-width: 420px; justify-content: center; margin: 0 auto;">
-          Get Instant Lifetime Access for $7
+        <button onclick="openCheckout()" class="btn-buy-primary" style="width: 100%; max-width: 420px; justify-content: center; margin: 0 auto; background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);">
+          Buy Lifetime Pass — $3.99
         </button>
+        <a href="DeclutterMac.dmg" download style="display: block; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; text-decoration: underline;">Or download free version with 2 folder sorts</a>
 
         <div class="compare-box">
-          <span class="compare-item-bad">✕ Typical cleaner: $39.99/year subscription</span>
-          <span class="compare-item-good">✓ Tidy Mac: 2 folders free, then $7 once for life.</span>
+          <span class="compare-item-bad">✕ Typical cleaner: $39.99/year recurring subscription</span>
+          <span class="compare-item-good">✓ Declutter Mac: 2 folders free, then $3.99 once forever.</span>
         </div>
       </div>
     </section>
@@ -823,7 +837,7 @@
       <div>
         <h3>The Golden Rule: Everything goes to the Trash first.</h3>
         <p>
-          We never run permanent deletions. Every file or cache Tidy Mac moves is placed inside your user Trash. If you ever change your mind, click Undo in Tidy Mac or pull it right back out of the macOS Trash.
+          We never run permanent deletions. Every file or cache Declutter Mac moves is placed inside your user Trash. If you ever change your mind, click Undo in Declutter Mac or pull it right back out of the macOS Trash.
         </p>
         <div class="safety-tags">
           <span class="safety-tag">✓ Zero permanent rm</span>
@@ -838,14 +852,14 @@
     <!-- Features -->
     <section class="section-title" id="features">
       <h2>Where your 40 GB of wasted disk space actually goes</h2>
-      <p>Tidy Mac zeroes in on the junk files that build up quietly in the background.</p>
+      <p>Declutter Mac zeroes in on the junk files that build up quietly in the background.</p>
     </section>
 
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">📦</div>
         <h3>Old Installers & Archives</h3>
-        <p>Every time you download an app, its <code>.dmg</code>, <code>.pkg</code>, or <code>.zip</code> sits in Downloads taking up 2 GB each. Tidy Mac flags installers older than 7 days for quick review.</p>
+        <p>Every time you download an app, its <code>.dmg</code>, <code>.pkg</code>, or <code>.zip</code> sits in Downloads taking up 2 GB each. Declutter Mac flags installers older than 7 days for quick review.</p>
       </div>
 
       <div class="feature-card">
@@ -863,7 +877,7 @@
       <div class="feature-card">
         <div class="feature-icon">📂</div>
         <h3>In-Place Folder Organizer</h3>
-        <p>Have 300 loose files in Downloads? Tidy Mac sorts them into Documents, Media, Projects, and Archives in-place, without creating messy nested folders or breaking project repos.</p>
+        <p>Have 300 loose files in Downloads? Declutter Mac sorts them into Documents, Media, Projects, and Archives in-place, without creating messy nested folders or breaking project repos.</p>
       </div>
 
       <div class="feature-card">
@@ -881,8 +895,8 @@
 
     <!-- Installation Steps -->
     <section class="section-title" id="install">
-      <h2>How to install and run Tidy Mac</h2>
-      <p>Three quick steps to get running locally on your Mac.</p>
+      <h2>How to install and run Declutter Mac</h2>
+      <p>Three quick steps to get running on your Mac.</p>
     </section>
 
     <div class="install-section">
@@ -890,7 +904,7 @@
         <div class="step-num">1</div>
         <div class="step-content">
           <h4>Download the DMG</h4>
-          <p>Download <code>TidyMac.dmg</code> using the buttons above, open the disk image, and drag <code>TidyMac.app</code> into your <code>Applications</code> folder.</p>
+          <p>Download <code>DeclutterMac.dmg</code> using the buttons above, open the disk image, and drag <code>DeclutterMac.app</code> into your <code>Applications</code> folder.</p>
         </div>
       </div>
 
@@ -898,7 +912,7 @@
         <div class="step-num">2</div>
         <div class="step-content">
           <h4>Grant Full Disk Access</h4>
-          <p>On first launch, follow the onboarding prompt to check Full Disk Access in macOS System Settings. This lets Tidy Mac calculate cache sizes and find unneeded files.</p>
+          <p>On first launch, follow the prompt to check Full Disk Access in macOS System Settings. This allows Declutter Mac to scan cache folders and calculate accurate folder sizes.</p>
         </div>
       </div>
 
@@ -906,7 +920,7 @@
         <div class="step-num">3</div>
         <div class="step-content">
           <h4>Enter Your Lifetime Key</h4>
-          <p>Paste your $7 lifetime license key into <strong>Settings &rarr; Trial & Licensing</strong> to unlock unlimited cleaning forever across all your Macs.</p>
+          <p>Paste your $3.99 lifetime license key into <strong>Settings &rarr; License & Edition</strong> or the Folder Organizer unlock prompt to unlock unlimited cleaning forever across all your Macs.</p>
         </div>
       </div>
     </div>
@@ -920,22 +934,22 @@
       <!-- Checkout Form -->
       <div id="checkoutFormView">
         <div class="modal-header">
-          <h3>Unlock Tidy Mac Lifetime</h3>
+          <h3>Unlock Declutter Mac Lifetime</h3>
           <p>One-time payment • Own forever on all your Macs</p>
         </div>
 
         <div class="order-summary">
           <div>
-            <strong>Tidy Mac Lifetime License</strong>
+            <strong>Declutter Mac Lifetime License</strong>
             <div style="font-size: 0.82rem; color: var(--text-muted);">Includes all future updates & unlimited cleaning</div>
           </div>
-          <div style="font-size: 1.3rem; font-weight: 800; color: #fff;">$7.00</div>
+          <div style="font-size: 1.3rem; font-weight: 800; color: #fff;">$3.99</div>
         </div>
 
         <form id="paymentForm" onsubmit="handlePaymentSubmit(event)">
           <div class="form-group">
             <label for="emailInput">Your Email (for receipt and license key)</label>
-            <input type="email" id="emailInput" placeholder="you@example.com" required value="developer@tidymac.local">
+            <input type="email" id="emailInput" placeholder="you@example.com" required value="developer@decluttermac.com">
           </div>
 
           <div class="form-group">
@@ -955,7 +969,7 @@
           </div>
 
           <button type="submit" class="btn-submit-pay" id="payButton">
-            Pay $7.00 & Get Lifetime Access
+            Pay $3.99 & Get Lifetime Access
           </button>
         </form>
       </div>
@@ -969,21 +983,16 @@
         </p>
 
         <div class="license-code-box">
-          <span id="generatedLicenseKey">TM7-LIFETIME-A94E-8F21</span>
+          <span id="generatedLicenseKey">DM-LIFETIME-A1B2-C3D4</span>
           <button class="btn-copy-license" onclick="copyLicense()">Copy</button>
         </div>
 
-        <div style="background: rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; font-size: 0.88rem; color: #CBD5E1; text-align: left; margin-bottom: 20px;">
-          <strong>How to activate:</strong>
-          <ol style="margin-left: 20px; margin-top: 6px;">
-            <li>Open <strong>Tidy Mac.app</strong></li>
-            <li>Click <strong>Settings</strong> in the left sidebar</li>
-            <li>Paste your key under <strong>Trial & Licensing</strong> and click <strong>Unlock</strong></li>
-          </ol>
-        </div>
+        <p style="font-size: 0.85rem; color: #CAD2DC; margin-bottom: 20px; line-height: 1.5;">
+          Copy this key and paste it into Declutter Mac under <strong>Settings &rarr; License & Edition</strong> or when prompted to unlock unlimited folder sorting!
+        </p>
 
-        <a href="TidyMac.dmg" download class="btn-buy-primary" style="display: block; text-align: center; text-decoration: none;">
-          Download TidyMac.dmg Now
+        <a href="DeclutterMac.dmg" download class="btn-buy-primary" style="display: block; text-align: center; text-decoration: none;">
+          Download DeclutterMac.dmg Now
         </a>
       </div>
     </div>
@@ -991,8 +1000,8 @@
 
   <!-- Footer -->
   <footer>
-    <p><strong>Tidy Mac</strong> — Fast, native Swift storage cleaner for macOS.</p>
-    <p style="margin-top: 6px; font-size: 0.82rem; color: #6E7681;">$7 one-time purchase. No recurring subscriptions. All deletions move to macOS Trash.</p>
+    <p><strong>Declutter Mac</strong> — Storage Cleaner & Folder Organizer for macOS.</p>
+    <p style="margin-top: 6px; font-size: 0.82rem; color: #6E7681;">$3.99 one-time purchase. No recurring subscriptions. All deletions move to macOS Trash.</p>
   </footer>
 
   <script>
@@ -1006,7 +1015,6 @@
       document.getElementById('checkoutModal').style.display = 'none';
     }
 
-    // Close on background click
     window.onclick = function(event) {
       const modal = document.getElementById('checkoutModal');
       if (event.target === modal) {
@@ -1017,24 +1025,24 @@
     function handlePaymentSubmit(e) {
       e.preventDefault();
       const btn = document.getElementById('payButton');
-      btn.innerText = "Processing $7.00...";
+      btn.innerText = "Processing $3.99...";
       btn.disabled = true;
 
-      // Generate a valid Tidy Mac lifetime license key
+      // Generate a valid Declutter Mac lifetime license key
       const randomHex = Math.random().toString(16).substring(2, 6).toUpperCase() + "-" + Math.random().toString(16).substring(2, 6).toUpperCase();
-      const licenseKey = "TM7-LIFETIME-" + randomHex;
+      const licenseKey = "DM-LIFETIME-" + randomHex;
       document.getElementById('generatedLicenseKey').innerText = licenseKey;
 
       setTimeout(() => {
         document.getElementById('checkoutFormView').style.display = 'none';
         document.getElementById('checkoutSuccessView').style.display = 'block';
-        btn.innerText = "Pay $7.00 & Get Lifetime Access";
+        btn.innerText = "Pay $3.99 & Get Lifetime Access";
         btn.disabled = false;
 
         // Auto trigger download
         const downloadLink = document.createElement('a');
-        downloadLink.href = 'TidyMac.dmg';
-        downloadLink.download = 'TidyMac.dmg';
+        downloadLink.href = 'DeclutterMac.dmg';
+        downloadLink.download = 'DeclutterMac.dmg';
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
@@ -1046,7 +1054,16 @@
       navigator.clipboard.writeText(key).then(() => {
         const btn = document.querySelector('.btn-copy-license');
         btn.innerText = "Copied!";
-        btn.style.color = "#7EE787";
+        setTimeout(() => { btn.innerText = "Copy"; }, 2000);
+      });
+    }
+
+    function copyInstallCmd() {
+      const cmd = "curl -fsSL https://decluttermac.com/install.sh | bash";
+      navigator.clipboard.writeText(cmd).then(() => {
+        const btn = document.getElementById('btnCopyInstall');
+        btn.innerText = "Copied!";
+        btn.style.color = "#30D158";
         setTimeout(() => {
           btn.innerText = "Copy";
           btn.style.color = "";

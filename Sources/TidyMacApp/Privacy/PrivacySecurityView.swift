@@ -20,7 +20,7 @@ public struct PrivacySecurityView: View {
                         Text(localized("privacy.title"))
                             .font(.title)
                             .fontWeight(.bold)
-                        Text("Tidy Mac is engineered with local-first, privacy-by-design principles.")
+                        Text("Declutter Mac is engineered with local-first, privacy-by-design principles.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -48,7 +48,7 @@ public struct PrivacySecurityView: View {
                         icon: "trash.slash.fill",
                         color: .orange,
                         title: "Trash-Only Deletion — Zero Permanent Erase",
-                        description: "Tidy Mac strictly moves items to macOS Trash. Permanent deletion is prohibited by code design. Any cleaned item can be inspected in the Trash and restored with a single click."
+                        description: "Declutter Mac strictly moves items to macOS Trash. Permanent deletion is prohibited by code design. Any cleaned item can be inspected in the Trash and restored with a single click."
                     )
                     
                     guaranteeCard(

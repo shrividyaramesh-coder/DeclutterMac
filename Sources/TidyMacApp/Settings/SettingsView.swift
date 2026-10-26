@@ -64,7 +64,7 @@ public struct SettingsView: View {
                 Text(localized("nav.settings"))
                     .font(.title)
                     .fontWeight(.bold)
-                Text("Customize Tidy Mac preferences, AI integrations, and licensing.")
+                Text("Customize Declutter Mac preferences, AI integrations, and licensing.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -100,10 +100,10 @@ public struct SettingsView: View {
                 Divider()
                 
                 // Menu Bar Toggle
-                Toggle("Show Tidy Mac in Menu Bar", isOn: $showMenuBarIcon)
+                Toggle("Show Declutter Mac in Menu Bar", isOn: $showMenuBarIcon)
                 
                 // Launch at Login Toggle
-                Toggle("Launch Tidy Mac at Login", isOn: $launchAtLogin)
+                Toggle("Launch Declutter Mac at Login", isOn: $launchAtLogin)
                 
                 Divider()
                 
@@ -153,7 +153,7 @@ public struct SettingsView: View {
             }
             
             VStack(alignment: .leading, spacing: 12) {
-                Text("Automate recurring cleanups in the background even when Tidy Mac is closed. Only rules you have approved will be executed.")
+                Text("Automate recurring cleanups in the background even when Declutter Mac is closed. Only rules you have approved will be executed.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -296,83 +296,63 @@ public struct SettingsView: View {
     
     private var licensingSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Trial & Licensing")
+            Text("License & Edition")
                 .font(.headline)
             
             VStack(spacing: 14) {
                 switch licenseStatus {
-                case .trial(let days):
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Full Access Trial Active")
-                                .font(.body)
-                                .fontWeight(.semibold)
-                            Text("\(days) days remaining in full trial")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        Text("\(days) Days")
-                            .font(.headline)
-                            .foregroundColor(.accentColor)
-                    }
-                    
-                case .freeTier(let cleaned, let allowance):
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Free Cleaning Allowance")
-                                .font(.body)
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Text("\(ByteCountFormatter.string(fromByteCount: cleaned, countStyle: .file)) of \(ByteCountFormatter.string(fromByteCount: allowance, countStyle: .file))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        ProgressView(value: Double(min(cleaned, allowance)), total: Double(allowance))
-                    }
-                    
                 case .unlocked(let key):
-                    HStack {
+                    HStack(spacing: 12) {
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(.green)
                             .font(.title2)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Tidy Mac Lifetime Unlocked")
+                            Text("Declutter Mac — Lifetime License Active")
                                 .font(.body)
                                 .fontWeight(.semibold)
-                            Text("License: \(key.prefix(8))...")
+                            Text("License Key: \(key.prefix(12))... • Unlimited folder sorting & disk cleaning on all your Macs")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
+                        Text("Lifetime Unlocked")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.green.opacity(0.12))
+                            .cornerRadius(6)
                     }
-                }
-                
-                if case .unlocked = licenseStatus {
-                    // Already unlocked
-                } else {
-                    Divider()
                     
-                    HStack {
+                default:
+                    HStack(spacing: 12) {
+                        Image(systemName: "folder.badge.gearshape")
+                            .foregroundColor(.accentColor)
+                            .font(.title2)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Folder Organization Allowance")
+                            Text("Declutter Mac — Free Tier")
                                 .font(.body)
                                 .fontWeight(.semibold)
-                            Text("First 2 folders free • $7 one-time purchase for lifetime unlimited access")
+                            Text("First 2 folders free • $3.99 one-time purchase for lifetime unlimited access")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
                         Text("\(min(2, folderSortsUsed)) of 2 Folders Used")
                             .font(.caption)
-                            .fontWeight(.semibold)
+                            .fontWeight(.bold)
                             .foregroundColor(folderSortsUsed >= 2 ? .orange : .accentColor)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background((folderSortsUsed >= 2 ? Color.orange : Color.accentColor).opacity(0.12))
+                            .cornerRadius(6)
                     }
                     
                     Divider()
                     
                     HStack(spacing: 12) {
-                        TextField("Enter $7 Lifetime License Key", text: $unlockKeyInput)
+                        TextField("Enter $3.99 Lifetime License Key", text: $unlockKeyInput)
                             .textFieldStyle(.roundedBorder)
                         
                         Button("Unlock") {
@@ -380,18 +360,32 @@ public struct SettingsView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .disabled(unlockKeyInput.trimmingCharacters(in: .whitespaces).isEmpty)
-                        
-                        Button("Restore") {
+                    }
+                    
+                    if let msg = licenseMessage {
+                        Text(msg)
+                            .font(.caption)
+                            .foregroundColor(msg.contains("success") ? .green : .red)
+                    }
+                    
+                    HStack(spacing: 12) {
+                        Button("Restore Purchases") {
                             restoreLicense()
                         }
                         .buttonStyle(.bordered)
+                        
+                        Button(action: {
+                            if let url = URL(string: "https://www.decluttermac.com#pricing") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "cart.fill")
+                                Text("Buy $3.99 Lifetime Pass Online")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
-                }
-                
-                if let message = licenseMessage {
-                    Text(message)
-                        .font(.caption)
-                        .foregroundColor(.accentColor)
                 }
             }
             .padding(16)

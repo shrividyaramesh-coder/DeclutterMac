@@ -77,4 +77,17 @@ func runDuplicateTests() async {
         expectEqual(selectedInCluster, 2, "2 copies marked for trashing, 1 original preserved")
         expect(selectedInCluster < foundGroup.items.count, "Keep-one invariant held during engine discovery")
     }
+
+    // 4. Performance & Safety Benchmark on Real User Folders
+    let home = FileManager.default.homeDirectoryForCurrentUser
+    let realFolders = [
+        home.appendingPathComponent("Downloads"),
+        home.appendingPathComponent("Desktop")
+    ].filter { FileManager.default.fileExists(atPath: $0.path) }
+    
+    let benchStart = Date()
+    let realDupGroups = await engine.findDuplicates(folders: realFolders)
+    let benchDuration = Date().timeIntervalSince(benchStart)
+    print("  ⚡️ Real user duplicate scan completed in \(String(format: "%.2f", benchDuration))s (Discovered \(realDupGroups.count) duplicate groups)")
+    expect(benchDuration < 5.0, "Duplicate scan on real user folders should complete under 5s")
 }

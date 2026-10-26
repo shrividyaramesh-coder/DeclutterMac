@@ -7,15 +7,18 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 WEB_DIR="${ROOT_DIR}/web"
 
 # Ensure DMG and ZIP are synced with the latest build
-if [ -f "${ROOT_DIR}/build/TidyMac.dmg" ]; then
-    cp "${ROOT_DIR}/build/TidyMac.dmg" "${WEB_DIR}/TidyMac.dmg"
-fi
-if [ -f "${ROOT_DIR}/build/TidyMac.zip" ]; then
-    cp "${ROOT_DIR}/build/TidyMac.zip" "${WEB_DIR}/TidyMac.zip"
-fi
+for ext in dmg zip; do
+    if [ -f "${ROOT_DIR}/build/DeclutterMac.${ext}" ]; then
+        cp "${ROOT_DIR}/build/DeclutterMac.${ext}" "${WEB_DIR}/DeclutterMac.${ext}"
+        cp "${ROOT_DIR}/build/DeclutterMac.${ext}" "${WEB_DIR}/TidyMac.${ext}"
+    elif [ -f "${ROOT_DIR}/build/TidyMac.${ext}" ]; then
+        cp "${ROOT_DIR}/build/TidyMac.${ext}" "${WEB_DIR}/DeclutterMac.${ext}"
+        cp "${ROOT_DIR}/build/TidyMac.${ext}" "${WEB_DIR}/TidyMac.${ext}"
+    fi
+done
 
 echo "============================================="
-echo "   Tidy Mac Download Site Server             "
+echo "   Declutter Mac Download Site Server        "
 echo "============================================="
 echo "Serving directory: ${WEB_DIR}"
 echo "URL: http://localhost:${PORT}"
