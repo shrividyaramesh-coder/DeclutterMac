@@ -63,6 +63,9 @@ public actor PlanExecutor {
         
         for candidate in candidates {
             for step in plan.steps {
+                if step.action == .move && !isLooseFile(candidate.url, directlyIn: step.targetFolder) {
+                    continue
+                }
                 if matches(file: candidate, filter: step.filter, relativeTo: now) {
                     let isMove = (step.action == .move)
                     let result = PlanMatchResult(
@@ -171,6 +174,17 @@ public actor PlanExecutor {
         )
     }
     
+    /// Organize steps only touch regular files sitting directly in the target folder. Folders (including the
+    /// category folders a previous run created) and files already inside subfolders are left where they are,
+    /// so organizing the same folder twice changes nothing.
+    private func isLooseFile(_ url: URL, directlyIn targetFolder: String) -> Bool {
+        let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        guard values?.isRegularFile == true, values?.isSymbolicLink != true else { return false }
+        let parent = url.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL.path
+        let target = URL(fileURLWithPath: targetFolder).resolvingSymlinksInPath().standardizedFileURL.path
+        return parent == target
+    }
+
     private func matches(file: FileItem, filter: CleaningFilter, relativeTo now: Date) -> Bool {
         // Category check
         if let categories = filter.categories, !categories.isEmpty {

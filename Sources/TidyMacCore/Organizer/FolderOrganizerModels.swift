@@ -78,10 +78,12 @@ public actor CategoryPreferencesStore {
     public static let shared = CategoryPreferencesStore()
     
     private let storageKey = "TidyMacLearnedCategoryPreferences"
+    private let defaults: UserDefaults
     private var preferences: [String: String] = [:]
     
-    public init() {
-        if let stored = UserDefaults.standard.dictionary(forKey: storageKey) as? [String: String] {
+    public init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        if let stored = defaults.dictionary(forKey: storageKey) as? [String: String] {
             self.preferences = stored
         }
     }
@@ -89,7 +91,7 @@ public actor CategoryPreferencesStore {
     /// Learns that a specific file extension or pattern should map to a preferred category name.
     public func rememberPreference(extensionKey: String, category: String) {
         preferences[extensionKey.lowercased()] = category
-        UserDefaults.standard.set(preferences, forKey: storageKey)
+        defaults.set(preferences, forKey: storageKey)
     }
     
     /// Retrieves user preferred category for an extension, if previously configured.
@@ -97,9 +99,14 @@ public actor CategoryPreferencesStore {
         preferences[extensionKey.lowercased()]
     }
     
+    /// Top-level folder names of learned categories (e.g. "Finance" for "Finance/Tax_2025").
+    public func learnedCategoryRoots() -> Set<String> {
+        Set(preferences.values.compactMap { $0.split(separator: "/").first.map(String.init) })
+    }
+    
     /// Clears learned preferences.
     public func reset() {
         preferences.removeAll()
-        UserDefaults.standard.removeObject(forKey: storageKey)
+        defaults.removeObject(forKey: storageKey)
     }
 }

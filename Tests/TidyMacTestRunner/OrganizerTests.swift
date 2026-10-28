@@ -250,4 +250,5 @@ func runOrganizerTests() async {
 
     // Reset back
     await licenseProvider.reset()
+    await preferences.reset()
 }
