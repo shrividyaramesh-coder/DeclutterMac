@@ -209,7 +209,7 @@ func runOrganizerTests() async {
     expect(deepTotalMoves >= 2, "Deep scan found unorganized files in nested subfolders to relocate")
 
     // 10. Folder Sorting Allowance Verification (2 Free Folders, Then Paywall, Then $3.99 Lifetime Unlock)
-    let licenseProvider = LocalLicenseProvider.shared
+    let licenseProvider = makeTestLicenseProvider(StubLicenseVerifier(validKeys: ["DM-LIFETIME-399-A1B2"]))
     await licenseProvider.reset()
 
     // Sort 0: Authorized (2 free left)

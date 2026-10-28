@@ -164,7 +164,7 @@ func runEndToEndFixtureTests() async {
     expectEqual(restoredCacheData?.count, 50_000, "Restored cache file matches original byte count exactly")
     
     // 6. Licensing & Allowance Verification
-    let licenseProvider = LocalLicenseProvider.shared
+    let licenseProvider = makeTestLicenseProvider(StubLicenseVerifier(validKeys: ["TM-2026-LIFETIME-PRO", "DM-LIFETIME-399-E2E"]))
     await licenseProvider.reset()
     let initialStatus = await licenseProvider.currentStatus()
     expect(initialStatus.isUnlimited, "Initial 15-day trial grants full access")

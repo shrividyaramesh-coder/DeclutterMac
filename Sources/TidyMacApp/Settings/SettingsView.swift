@@ -446,13 +446,17 @@ public struct SettingsView: View {
     
     private func unlockLicense() {
         Task {
-            let success = await LocalLicenseProvider.shared.unlockLifetime(key: unlockKeyInput)
-            if success {
+            switch await LocalLicenseProvider.shared.activateLifetime(key: unlockKeyInput) {
+            case .success:
                 let status = await LocalLicenseProvider.shared.currentStatus()
                 await MainActor.run {
                     self.licenseStatus = status
                     self.licenseMessage = "Lifetime license activated successfully!"
                     self.unlockKeyInput = ""
+                }
+            case .failure(let error):
+                await MainActor.run {
+                    self.licenseMessage = error.userMessage
                 }
             }
         }
