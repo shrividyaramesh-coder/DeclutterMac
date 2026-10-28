@@ -45,8 +45,8 @@ public struct DodoLicenseClient: LicenseKeyVerifying {
 
     /// Must match the checkout the website links to: keys bought in test mode only validate against `.test`.
     public static let environment: Environment = .live
-    /// Set to the live product ID to reject keys issued for other products on the same Dodo account.
-    public static let expectedProductID: String? = nil
+    /// The live Declutter Mac product; keys issued for other products on the same Dodo account are rejected.
+    public static let expectedProductID: String? = "pdt_0NqhWbYx5j9eAeiJOrA7V"
 
     private let baseURL: URL
     private let expectedProductID: String?
