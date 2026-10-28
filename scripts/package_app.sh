@@ -5,9 +5,10 @@ echo "============================================="
 echo "   Building Declutter Mac Native macOS Bundle"
 echo "============================================="
 
-# 1. Compile release executable
-echo "[1/4] Compiling release binaries via SwiftPM..."
-swift build -c release
+# 1. Compile release executables for Apple Silicon and Intel
+echo "[1/4] Compiling universal release binaries via SwiftPM..."
+swift build -c release --triple arm64-apple-macosx14.0 --product TidyMacApp
+swift build -c release --triple x86_64-apple-macosx14.0 --product TidyMacApp
 
 # 2. Setup bundle structure
 APP_NAME="DeclutterMac.app"
@@ -22,8 +23,11 @@ rm -rf "${APP_DIR}"
 mkdir -p "${MACOS_DIR}"
 mkdir -p "${RESOURCES_DIR}"
 
-# Copy executable
-cp ".build/release/TidyMacApp" "${MACOS_DIR}/DeclutterMacApp"
+# Combine both architectures into one universal executable
+lipo -create \
+    ".build/arm64-apple-macosx/release/TidyMacApp" \
+    ".build/x86_64-apple-macosx/release/TidyMacApp" \
+    -output "${MACOS_DIR}/DeclutterMacApp"
 chmod +x "${MACOS_DIR}/DeclutterMacApp"
 
 # 3. Generate icon
@@ -33,8 +37,8 @@ iconutil -c icns "${BUILD_DIR}/icon.iconset" -o "${BUILD_DIR}/AppIcon.icns"
 cp "${BUILD_DIR}/AppIcon.icns" "${RESOURCES_DIR}/AppIcon.icns"
 
 # Copy any resource bundles
-if [ -d ".build/release/TidyMac_TidyMacCore.bundle" ]; then
-    cp -R ".build/release/TidyMac_TidyMacCore.bundle" "${RESOURCES_DIR}/"
+if [ -d ".build/arm64-apple-macosx/release/TidyMac_TidyMacCore.bundle" ]; then
+    cp -R ".build/arm64-apple-macosx/release/TidyMac_TidyMacCore.bundle" "${RESOURCES_DIR}/"
 fi
 
 # 4. Create Info.plist
@@ -59,9 +63,9 @@ cat << 'EOF' > "${CONTENTS_DIR}/Info.plist"
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleVersion</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.0</string>
+    <string>1.1.0</string>
     <key>LSMinimumSystemVersion</key>
     <string>14.0</string>
     <key>NSHighResolutionCapable</key>
