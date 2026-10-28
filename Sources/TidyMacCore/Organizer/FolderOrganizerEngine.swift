@@ -20,7 +20,24 @@ public actor FolderOrganizerEngine {
     public static let reservedTopLevelCategories: Set<String> = [
         "Documents", "Media", "Archives", "Installers", "Development", "Other", "Organized"
     ]
-    
+
+    /// Every folder name `determineCategory` can produce in any context, so a later run leaves them in place.
+    public static let generatedFolderNames: Set<String> = reservedTopLevelCategories.union([
+        "Folders", "No Extension", "Projects", "Source Code",
+        "Images", "Videos", "Audio", "Screenshots", "AI Generated", "Banners & Graphics",
+        "Photos & Pictures", "Vectors & Icons", "GIFs & Animations",
+        "PDFs", "Text & Notes", "Spreadsheets", "Presentations"
+    ])
+
+    /// Whether a folder was created by this engine (any strategy) or names a learned category. These are the
+    /// results of earlier runs; moving them again would nest "PDF Files" into "Folders", one month into the next, etc.
+    public func isGeneratedFolder(named name: String) async -> Bool {
+        if Self.generatedFolderNames.contains(name) { return true }
+        if name.range(of: #"^[A-Z0-9]+ Files$"#, options: .regularExpression) != nil { return true } // By File Type
+        if name.range(of: #"^\d{4}-\d{2} \(.+\)$"#, options: .regularExpression) != nil { return true } // By Date
+        return await preferencesStore.learnedCategoryRoots().contains(name)
+    }
+
     /// Discovers visible subdirectories inside `folder` up to `maxDepth` for drill-down navigation.
     public func discoverSubfolders(in folder: URL, maxDepth: Int = 2) -> [URL] {
         var subfolders: [URL] = []
@@ -87,10 +104,16 @@ public actor FolderOrganizerEngine {
                     if isDirectory {
                         // Skip reserved top-level category containers
                         if Self.reservedTopLevelCategories.contains(itemName) { continue }
-                        // Allow project bundles as atomic units
+                        // Folders an earlier run moved as a unit stay intact; don't pull their files back out
+                        if itemName == "Folders" || itemName == "Projects" {
+                            enumerator.skipDescendants()
+                            continue
+                        }
+                        // Allow project bundles as atomic units, and never split their contents into other categories
                         if !Self.isProjectOrBundleDirectory(fileURL) {
                             continue
                         }
+                        enumerator.skipDescendants()
                     }
                     itemsToAnalyze.append(fileURL)
                 }
@@ -126,8 +149,11 @@ public actor FolderOrganizerEngine {
             if values?.isSymbolicLink == true { continue }
             let isDirectory = values?.isDirectory ?? false
             
-            // If it's a reserved category folder at the top level of targetFolder, skip it
-            if isDirectory && Self.reservedTopLevelCategories.contains(itemName) && itemURL.deletingLastPathComponent().standardizedFileURL == targetFolder.standardizedFileURL {
+            // Folders earlier runs created at the top level of targetFolder stay where they are
+            let resolvedItemPath = itemURL.resolvingSymlinksInPath().standardizedFileURL.path
+            let resolvedTargetPath = targetFolder.resolvingSymlinksInPath().standardizedFileURL.path
+            let isTopLevel = (resolvedItemPath as NSString).deletingLastPathComponent == resolvedTargetPath
+            if isDirectory && isTopLevel, await isGeneratedFolder(named: itemName) {
                 continue
             }
             
@@ -144,19 +170,23 @@ public actor FolderOrganizerEngine {
             
             let categoryDestFolder = destRoot.appendingPathComponent(categoryName)
             
+            // Compare resolved paths: the enumerator reports /private/var/... for a folder opened as /var/...
+            let resolvedDestPath = categoryDestFolder.resolvingSymlinksInPath().standardizedFileURL.path
+            
             // Never move an item into itself
-            if itemURL.standardizedFileURL == categoryDestFolder.standardizedFileURL {
+            if resolvedItemPath == resolvedDestPath {
                 continue
             }
             
             // Skip if item is already inside its destination category folder
-            let parentDir = itemURL.deletingLastPathComponent().standardizedFileURL
-            if parentDir == categoryDestFolder.standardizedFileURL || itemURL.path.hasPrefix(categoryDestFolder.path + "/") {
+            if resolvedItemPath.hasPrefix(resolvedDestPath + "/") {
                 continue
             }
             
             let targetURL = resolveCollisionSafeTarget(for: itemName, in: categoryDestFolder)
-            let relPath = itemURL.path.replacingOccurrences(of: targetFolder.path + "/", with: "")
+            let relPath = resolvedItemPath.hasPrefix(resolvedTargetPath + "/")
+                ? String(resolvedItemPath.dropFirst(resolvedTargetPath.count + 1))
+                : itemName
             
             let move = ProposedMove(
                 originalURL: itemURL,
@@ -235,20 +265,21 @@ public actor FolderOrganizerEngine {
             let actionableMoves = group.moves.filter(\.isSelected)
             guard !actionableMoves.isEmpty else { continue }
             
-            // Create target directory if needed
-            do {
-                try fileManager.createDirectory(at: group.destinationFolder, withIntermediateDirectories: true)
-            } catch {
-                lastError = error
-                continue
-            }
-            
             for move in actionableMoves {
                 let source = move.originalURL
                 
                 // Validate safety
                 guard PathValidator.isPathAllowed(source, allowedRoots: allowedRoots) else {
                     validationFailureCount += 1
+                    continue
+                }
+                
+                // Create the target directory only when something will actually move into it
+                guard fileManager.fileExists(atPath: source.path) else { continue }
+                do {
+                    try fileManager.createDirectory(at: group.destinationFolder, withIntermediateDirectories: true)
+                } catch {
+                    lastError = error
                     continue
                 }
                 
@@ -346,7 +377,7 @@ public actor FolderOrganizerEngine {
         
         // 3. Smart Categories Strategy
         let folderName = targetFolder.lastPathComponent.lowercased()
-        let isImagesFolder = folderName.contains("image") || folderName.contains("photo") || folderName.contains("pic")
+        let isImagesFolder = Self.nameHasWord(targetFolder.lastPathComponent, ["image", "photo", "pic", "picture"])
         
         // Context 3A: Organizing an Images folder directly (e.g. Downloads/Media/Images)
         if isImagesFolder {
@@ -456,39 +487,31 @@ public actor FolderOrganizerEngine {
     
     /// Classifies a loose folder based on its title and internal file signatures.
     public static func defaultCategoryName(forFolder folderName: String, folderURL: URL? = nil) -> String {
-        let name = folderName.lowercased()
-        
         // 1. Code / Development projects
-        if name.contains("project") || name.contains("dev") || name.contains("code") ||
-           name.contains("app") || name.contains("repo") || name.contains("git") ||
-           name.contains("stitch") || name.contains("starter") || name.contains("utility") {
+        if nameHasWord(folderName, ["project", "dev", "development", "developer", "code", "source", "src",
+                                    "app", "repo", "git", "github", "sdk"]) {
             return "Development/Projects"
         }
         
         // 2. Media / Albums
-        if name.contains("photo") || name.contains("video") || name.contains("image") ||
-           name.contains("pic") || name.contains("art") || name.contains("draw") ||
-           name.contains("nail") || name.contains("album") || name.contains("audio") ||
-           name.contains("music") || name.contains("media") {
+        if nameHasWord(folderName, ["photo", "video", "image", "pic", "picture", "art", "artwork", "drawing",
+                                    "album", "audio", "music", "media", "movie", "song", "wallpaper"]) {
             return "Media/Folders"
         }
         
         // 3. Installers
-        if name.contains("installer") || name.contains("setup") || name.contains("cleanable") {
+        if nameHasWord(folderName, ["installer", "setup"]) {
             return "Installers/Folders"
         }
         
         // 4. Archives
-        if name.contains("archive") || name.contains("backup") || name.contains("zip") || name.contains("extracted") {
+        if nameHasWord(folderName, ["archive", "backup", "zip", "extracted"]) {
             return "Archives/Folders"
         }
         
         // 5. Classes / Education / Work / Documents
-        if name.contains("class") || name.contains("course") || name.contains("lecture") ||
-           name.contains("material") || name.contains("study") || name.contains("school") ||
-           name.contains("college") || name.contains("paper") || name.contains("doc") ||
-           name.contains("work") || name.contains("report") || name.contains("consumer") ||
-           name.contains("shriv") || name.contains("personal") || name.contains("general") {
+        if nameHasWord(folderName, ["class", "course", "lecture", "material", "study", "school", "college",
+                                    "paper", "doc", "document", "work", "report", "note", "homework", "assignment"]) {
             return "Documents/Folders"
         }
         
@@ -504,6 +527,20 @@ public actor FolderOrganizerEngine {
         }
         
         return "Documents/Folders"
+    }
+    
+    /// Whether a name contains one of `keywords` as a whole word (or its plural). Splits camelCase and
+    /// separators, so "MyWebApp" and "class_notes" match "app" and "class" while "Happy" and "Party" don't.
+    static func nameHasWord(_ name: String, _ keywords: [String]) -> Bool {
+        var spaced = ""
+        var previous: Character? = nil
+        for character in name {
+            if let previous, previous.isLowercase, character.isUppercase { spaced.append(" ") }
+            spaced.append(character)
+            previous = character
+        }
+        let words = Set(spaced.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
+        return keywords.contains { words.contains($0) || words.contains($0 + "s") || words.contains($0 + "es") }
     }
     
     /// Calculates folder size quickly with an iteration limit to maintain UI responsiveness.
