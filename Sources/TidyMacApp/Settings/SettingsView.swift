@@ -4,6 +4,7 @@ import TidyMacCore
 
 public struct SettingsView: View {
     @ObservedObject private var localization = LocalizationManager.shared
+    @ObservedObject private var autoOrganize = AutoOrganizeController.shared
     
     @State private var selectedLanguage: AppLanguage = LocalizationManager.shared.currentLanguage
     @State private var selectedAIProvider: AIProvider = .heuristic
@@ -13,7 +14,6 @@ public struct SettingsView: View {
     @State private var unlockKeyInput: String = ""
     @State private var licenseMessage: String? = nil
     @State private var managedFolders: [URL] = []
-    @State private var launchAtLogin: Bool = true
     @State private var showMenuBarIcon: Bool = true
     @State private var showOnboardingSheet: Bool = false
     @State private var scheduleSettings: ScheduleSettings = ScheduleSettings()
@@ -32,7 +32,10 @@ public struct SettingsView: View {
                 // Section 1: General & Localization
                 generalSection
                 
-                // Section 2: Continuous Cleanup Schedule (Set & Forget)
+                // Section 2: Keep Folders Tidy Automatically
+                autoOrganizeSection
+                
+                // Section 3: Continuous Cleanup Schedule (Set & Forget)
                 scheduleSection
                 
                 // Section 3: AI Provider & API Keys
@@ -103,7 +106,10 @@ public struct SettingsView: View {
                 Toggle("Show Declutter Mac in Menu Bar", isOn: $showMenuBarIcon)
                 
                 // Launch at Login Toggle
-                Toggle("Launch Declutter Mac at Login", isOn: $launchAtLogin)
+                Toggle("Launch Declutter Mac at Login", isOn: Binding(
+                    get: { autoOrganize.launchAtLoginEnabled },
+                    set: { autoOrganize.setLaunchAtLogin($0) }
+                ))
                 
                 Divider()
                 
@@ -126,6 +132,101 @@ public struct SettingsView: View {
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(12)
         }
+    }
+    
+    private var autoOrganizeSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Keep Folders Tidy Automatically")
+                    .font(.headline)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { autoOrganize.settings.isEnabled },
+                    set: { enabled in autoOrganize.update { $0.isEnabled = enabled } }
+                ))
+                .labelsHidden()
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("New files go into a Recents folder so your Desktop and Downloads stay clear. After a few days they're sorted into folders. Anything you put in “Keep As Is” is never touched, and every change can be undone in History.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Divider()
+                
+                Text("Folders to keep tidy")
+                    .font(.body)
+                ForEach(autoOrganizeFolderChoices, id: \.path) { folder in
+                    Toggle(folder.lastPathComponent, isOn: Binding(
+                        get: { autoOrganize.settings.folderPaths.contains(folder.path) },
+                        set: { included in
+                            autoOrganize.update { settings in
+                                settings.folderPaths.removeAll { $0 == folder.path }
+                                if included { settings.folderPaths.append(folder.path) }
+                            }
+                        }
+                    ))
+                }
+                
+                Divider()
+                
+                Stepper(value: Binding(
+                    get: { autoOrganize.settings.recentsDays },
+                    set: { days in autoOrganize.update { $0.recentsDays = days } }
+                ), in: AutoOrganizeSettings.recentsDayRange) {
+                    let days = autoOrganize.settings.recentsDays
+                    Text("Keep new files in Recents for \(days) day\(days == 1 ? "" : "s")")
+                }
+                
+                Divider()
+                
+                Toggle(isOn: Binding(
+                    get: { autoOrganize.settings.useAITopics },
+                    set: { useAI in autoOrganize.update { $0.useAITopics = useAI } }
+                )) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Sort by topic with on-device AI")
+                        Text(autoOrganize.isAIAvailable
+                             ? "Uses Apple Intelligence on this Mac to make folders like Tax Documents or Travel. Only file names are read, and nothing leaves your Mac."
+                             : "Needs macOS 26 with Apple Intelligence turned on. Until then, files are sorted by type (Documents, Images, Archives…).")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Divider()
+                
+                HStack {
+                    if let lastRun = autoOrganize.settings.lastRunDate {
+                        Text("Last checked: \(DateFormatter.localizedString(from: lastRun, dateStyle: .short, timeStyle: .short))")
+                    } else {
+                        Text("Last checked: Never")
+                    }
+                    Spacer()
+                    Button(autoOrganize.isRunning ? "Organizing…" : "Organize Now") {
+                        Task { await autoOrganize.runNow() }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(autoOrganize.isRunning || autoOrganize.settings.folderPaths.isEmpty)
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+                
+                if let message = autoOrganize.statusMessage {
+                    Text(message)
+                        .font(.caption)
+                        .foregroundColor(autoOrganize.isAllowedByLicense ? .secondary : .orange)
+                }
+            }
+            .padding(16)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var autoOrganizeFolderChoices: [URL] {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        return ["Desktop", "Downloads", "Documents"].map { home.appendingPathComponent($0, isDirectory: true) }
     }
     
     private var scheduleSection: some View {
