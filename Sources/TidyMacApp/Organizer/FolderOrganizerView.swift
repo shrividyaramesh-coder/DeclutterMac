@@ -895,15 +895,15 @@ public struct FolderOrganizerView: View {
                     
                     Button("Unlock") {
                         Task {
-                            let success = await LocalLicenseProvider.shared.unlockLifetime(key: paywallKeyInput)
-                            if success {
+                            switch await LocalLicenseProvider.shared.activateLifetime(key: paywallKeyInput) {
+                            case .success:
                                 await refreshLicenseAndSorts()
                                 await MainActor.run {
                                     self.showPaywallSheet = false
                                 }
-                            } else {
+                            case .failure(let error):
                                 await MainActor.run {
-                                    self.paywallMessage = "Invalid license key format."
+                                    self.paywallMessage = error.userMessage
                                 }
                             }
                         }

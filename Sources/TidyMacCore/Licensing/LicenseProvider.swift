@@ -23,6 +23,8 @@ public protocol LicenseProvider: Sendable {
     func currentStatus() async -> LicenseStatus
     func recordCleanedBytes(_ bytes: Int64) async
     func unlockLifetime(key: String) async -> Bool
+    /// Activates a lifetime key with the payment provider; unlocks only when the key is accepted.
+    func activateLifetime(key: String) async -> Result<Void, LicenseActivationError>
     func restorePurchases() async -> Bool
     func reset() async
     
@@ -46,27 +48,41 @@ public actor LocalLicenseProvider: LicenseProvider {
     private let trialStartDateKey = "TidyMacTrialStartDate"
     private let lifetimeLicenseKey = "TidyMacLifetimeLicenseKey"
     private let folderSortsKey = "TidyMacFolderSortsCount"
+    private let licenseInstanceKey = "TidyMacLicenseInstanceID"
     
+    private let verifier: LicenseKeyVerifying
+    private let defaults: UserDefaults
     private var cleanedBytes: Int64
     private var trialStartDate: Date
     private var lifetimeKey: String?
+    /// Activation instance ID from the payment provider. A key only counts as unlocked once it has one,
+    /// so keys saved by older builds (which accepted any text) must be activated again.
+    private var licenseInstanceID: String?
     private var folderSorts: Int
     
-    public init() {
-        self.cleanedBytes = Int64(UserDefaults.standard.integer(forKey: cleanedBytesKey))
-        self.folderSorts = UserDefaults.standard.integer(forKey: folderSortsKey)
-        if let storedDate = UserDefaults.standard.object(forKey: trialStartDateKey) as? Date {
+    public init(verifier: LicenseKeyVerifying = DodoLicenseClient(), defaults: UserDefaults = .standard) {
+        self.verifier = verifier
+        self.defaults = defaults
+        self.cleanedBytes = Int64(defaults.integer(forKey: cleanedBytesKey))
+        self.folderSorts = defaults.integer(forKey: folderSortsKey)
+        if let storedDate = defaults.object(forKey: trialStartDateKey) as? Date {
             self.trialStartDate = storedDate
         } else {
             let now = Date()
             self.trialStartDate = now
-            UserDefaults.standard.set(now, forKey: trialStartDateKey)
+            defaults.set(now, forKey: trialStartDateKey)
         }
-        self.lifetimeKey = UserDefaults.standard.string(forKey: lifetimeLicenseKey)
+        self.lifetimeKey = defaults.string(forKey: lifetimeLicenseKey)
+        self.licenseInstanceID = defaults.string(forKey: licenseInstanceKey)
+    }
+    
+    private var activatedKey: String? {
+        guard let key = lifetimeKey, !key.isEmpty, licenseInstanceID != nil else { return nil }
+        return key
     }
     
     public func currentStatus() -> LicenseStatus {
-        if let key = lifetimeKey, !key.isEmpty {
+        if let key = activatedKey {
             return .unlocked(licenseKey: key)
         }
         let elapsed = Calendar.current.dateComponents([.day], from: trialStartDate, to: Date()).day ?? 0
@@ -79,7 +95,7 @@ public actor LocalLicenseProvider: LicenseProvider {
     
     public func recordCleanedBytes(_ bytes: Int64) {
         cleanedBytes += bytes
-        UserDefaults.standard.set(cleanedBytes, forKey: cleanedBytesKey)
+        defaults.set(cleanedBytes, forKey: cleanedBytesKey)
     }
     
     public func folderSortsCount() -> Int {
@@ -87,7 +103,7 @@ public actor LocalLicenseProvider: LicenseProvider {
     }
     
     public func canSortFolder() -> Bool {
-        if let key = lifetimeKey, !key.isEmpty {
+        if activatedKey != nil {
             return true
         }
         return folderSorts < Self.maxFreeFolderSorts
@@ -95,33 +111,60 @@ public actor LocalLicenseProvider: LicenseProvider {
     
     public func recordFolderSort() {
         folderSorts += 1
-        UserDefaults.standard.set(folderSorts, forKey: folderSortsKey)
+        defaults.set(folderSorts, forKey: folderSortsKey)
     }
     
-    public func unlockLifetime(key: String) -> Bool {
+    public func unlockLifetime(key: String) async -> Bool {
+        if case .success = await activateLifetime(key: key) { return true }
+        return false
+    }
+    
+    public func activateLifetime(key: String) async -> Result<Void, LicenseActivationError> {
         let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
-        self.lifetimeKey = trimmed
-        UserDefaults.standard.set(trimmed, forKey: lifetimeLicenseKey)
-        return true
+        guard !trimmed.isEmpty else { return .failure(.emptyKey) }
+        do {
+            let instanceID = try await verifier.activate(key: trimmed, deviceName: Self.deviceName)
+            storeLicense(key: trimmed, instanceID: instanceID)
+            return .success(())
+        } catch {
+            return .failure(error)
+        }
     }
     
-    public func restorePurchases() -> Bool {
-        if let key = UserDefaults.standard.string(forKey: lifetimeLicenseKey), !key.isEmpty {
-            self.lifetimeKey = key
+    /// Re-checks the saved key with the payment provider. Stays unlocked when offline; locks only when
+    /// the provider says the key or this Mac's activation is no longer valid.
+    public func restorePurchases() async -> Bool {
+        guard let key = lifetimeKey, !key.isEmpty else { return false }
+        guard let instanceID = licenseInstanceID else {
+            return await unlockLifetime(key: key)
+        }
+        do {
+            let valid = try await verifier.validate(key: key, instanceID: instanceID)
+            if !valid { storeLicense(key: nil, instanceID: nil) }
+            return valid
+        } catch {
             return true
         }
-        return false
     }
     
     public func reset() {
         cleanedBytes = 0
         folderSorts = 0
         trialStartDate = Date()
-        lifetimeKey = nil
-        UserDefaults.standard.removeObject(forKey: cleanedBytesKey)
-        UserDefaults.standard.removeObject(forKey: folderSortsKey)
-        UserDefaults.standard.removeObject(forKey: trialStartDateKey)
-        UserDefaults.standard.removeObject(forKey: lifetimeLicenseKey)
+        storeLicense(key: nil, instanceID: nil)
+        defaults.removeObject(forKey: cleanedBytesKey)
+        defaults.removeObject(forKey: folderSortsKey)
+        defaults.removeObject(forKey: trialStartDateKey)
+    }
+    
+    private func storeLicense(key: String?, instanceID: String?) {
+        lifetimeKey = key
+        licenseInstanceID = instanceID
+        defaults.set(key, forKey: lifetimeLicenseKey)
+        defaults.set(instanceID, forKey: licenseInstanceKey)
+    }
+    
+    private static var deviceName: String {
+        Host.current().localizedName ?? "Mac"
     }
 }

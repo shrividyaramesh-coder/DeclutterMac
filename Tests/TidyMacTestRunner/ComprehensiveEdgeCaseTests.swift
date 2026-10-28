@@ -174,7 +174,7 @@ func runComprehensiveEdgeCaseTests() async {
     // =========================================================================
     // WORK CASE 6: Free Allowance & Lifetime Unlock Transitions
     // =========================================================================
-    let license = LocalLicenseProvider.shared
+    let license = makeTestLicenseProvider(StubLicenseVerifier(validKeys: ["TM-2026-PRO-LIFETIME"]))
     
     // Record free clean of 1.5 GB
     await license.recordCleanedBytes(1_500_000_000)
