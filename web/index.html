@@ -779,6 +779,16 @@
         <span>Universal (Apple Silicon & Intel)</span>
       </div>
 
+      <!-- What's New -->
+      <div style="max-width: 580px; margin: 24px auto 0; background: rgba(48, 209, 88, 0.08); border: 1px solid rgba(48, 209, 88, 0.3); border-radius: 12px; padding: 14px 18px; text-align: left; font-size: 0.9rem; line-height: 1.55;">
+        <strong style="color: #30D158;">New in version 1.1</strong>
+        <ul style="margin: 6px 0 0; padding-left: 18px; color: #CAD2DC;">
+          <li><strong>Keeps your Desktop and Downloads tidy on its own.</strong> New files wait in a Recents folder, then get sorted into topic folders like Tax Documents or Travel by on-device AI. Only file names are read, and nothing leaves your Mac. (AI topics need macOS 26 with Apple Intelligence; other Macs sort by file type.)</li>
+          <li>Put anything in the “Keep As Is” folder and it's never touched. Every change can be undone.</li>
+          <li>Organizing a folder again no longer reshuffles it, and the app now runs natively on Intel Macs.</li>
+        </ul>
+      </div>
+
       <!-- Quick Terminal Install Box -->
       <div style="max-width: 580px; margin: 28px auto 0; background: var(--code-bg); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; font-family: ui-monospace, Menlo, Monaco, Consolas, monospace; font-size: 0.88rem; color: #8BE9FD; text-align: left;">
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 12px;">
@@ -935,78 +945,6 @@
     </div>
   </main>
 
-  <!-- Checkout Modal -->
-  <div class="modal-overlay" id="checkoutModal">
-    <div class="modal-card">
-      <button class="modal-close" onclick="closeCheckout()">&times;</button>
-      
-      <!-- Checkout Form -->
-      <div id="checkoutFormView">
-        <div class="modal-header">
-          <h3>Unlock Declutter Mac Lifetime</h3>
-          <p>One-time payment • Own forever on all your Macs</p>
-        </div>
-
-        <div class="order-summary">
-          <div>
-            <strong>Declutter Mac Lifetime License</strong>
-            <div style="font-size: 0.82rem; color: var(--text-muted);">Includes all future updates & unlimited cleaning</div>
-          </div>
-          <div style="font-size: 1.3rem; font-weight: 800; color: #fff;">$3.99</div>
-        </div>
-
-        <form id="paymentForm" onsubmit="handlePaymentSubmit(event)">
-          <div class="form-group">
-            <label for="emailInput">Your Email (for receipt and license key)</label>
-            <input type="email" id="emailInput" placeholder="you@example.com" required value="developer@decluttermac.com">
-          </div>
-
-          <div class="form-group">
-            <label for="cardInput">Card Information</label>
-            <input type="text" id="cardInput" placeholder="4242 •••• •••• 4242" required value="4242 4242 4242 4242">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="expInput">Expires</label>
-              <input type="text" id="expInput" placeholder="MM/YY" required value="12/28">
-            </div>
-            <div class="form-group">
-              <label for="cvcInput">CVC</label>
-              <input type="text" id="cvcInput" placeholder="123" required value="888">
-            </div>
-          </div>
-
-          <button type="submit" class="btn-submit-pay" id="payButton">
-            Pay $3.99 & Get Lifetime Access
-          </button>
-        </form>
-      </div>
-
-      <!-- Success Screen -->
-      <div id="checkoutSuccessView" class="success-view">
-        <div class="success-icon">✓</div>
-        <h3>Purchase Complete!</h3>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 4px;">
-          Your lifetime license key is ready. Your download will start automatically.
-        </p>
-
-        <div class="license-code-box">
-          <span id="generatedLicenseKey">DM-LIFETIME-A1B2-C3D4</span>
-          <button class="btn-copy-license" onclick="copyLicense()">Copy</button>
-        </div>
-
-        <p style="font-size: 0.85rem; color: #CAD2DC; margin-bottom: 20px; line-height: 1.5;">
-          Copy this key and paste it into Declutter Mac under <strong>Settings &rarr; License & Edition</strong> or when prompted to unlock unlimited folder sorting!
-        </p>
-
-        <a href="DeclutterMac.dmg" download class="btn-buy-primary" style="display: block; text-align: center; text-decoration: none;">
-          Download DeclutterMac.dmg Now
-        </a>
-      </div>
-    </div>
-  </div>
-
   <!-- Footer -->
   <footer>
     <p><strong>Declutter Mac</strong> — Storage Cleaner & Folder Organizer for macOS.</p>
@@ -1018,53 +956,6 @@
 
     function openCheckout() {
       window.open(DODO_CHECKOUT_URL, '_blank');
-    }
-
-    function closeCheckout() {
-      document.getElementById('checkoutModal').style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-      const modal = document.getElementById('checkoutModal');
-      if (event.target === modal) {
-        closeCheckout();
-      }
-    };
-
-    function handlePaymentSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('payButton');
-      btn.innerText = "Processing $3.99...";
-      btn.disabled = true;
-
-      // Generate a valid Declutter Mac lifetime license key
-      const randomHex = Math.random().toString(16).substring(2, 6).toUpperCase() + "-" + Math.random().toString(16).substring(2, 6).toUpperCase();
-      const licenseKey = "DM-LIFETIME-" + randomHex;
-      document.getElementById('generatedLicenseKey').innerText = licenseKey;
-
-      setTimeout(() => {
-        document.getElementById('checkoutFormView').style.display = 'none';
-        document.getElementById('checkoutSuccessView').style.display = 'block';
-        btn.innerText = "Pay $3.99 & Get Lifetime Access";
-        btn.disabled = false;
-
-        // Auto trigger download
-        const downloadLink = document.createElement('a');
-        downloadLink.href = 'DeclutterMac.dmg';
-        downloadLink.download = 'DeclutterMac.dmg';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      }, 700);
-    }
-
-    function copyLicense() {
-      const key = document.getElementById('generatedLicenseKey').innerText;
-      navigator.clipboard.writeText(key).then(() => {
-        const btn = document.querySelector('.btn-copy-license');
-        btn.innerText = "Copied!";
-        setTimeout(() => { btn.innerText = "Copy"; }, 2000);
-      });
     }
 
     function copyInstallCmd() {
