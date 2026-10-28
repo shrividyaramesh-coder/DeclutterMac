@@ -26,7 +26,9 @@ public actor FolderOrganizerEngine {
         "Folders", "No Extension", "Projects", "Source Code",
         "Images", "Videos", "Audio", "Screenshots", "AI Generated", "Banners & Graphics",
         "Photos & Pictures", "Vectors & Icons", "GIFs & Animations",
-        "PDFs", "Text & Notes", "Spreadsheets", "Presentations"
+        "PDFs", "Text & Notes", "Spreadsheets", "Presentations",
+        // Auto-organize folders
+        "Recents", "Keep As Is", "Sorted"
     ])
 
     /// Whether a folder was created by this engine (any strategy) or names a learned category. These are the
