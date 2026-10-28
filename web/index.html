@@ -778,6 +778,9 @@
         <span>•</span>
         <span>Universal (Apple Silicon & Intel)</span>
       </div>
+      <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-muted);">
+        macOS says it can't verify the app? <a href="#first-open" style="color: var(--text-muted); text-decoration: underline;">Here's how to open it</a>.
+      </p>
 
       <!-- What's New -->
       <div style="max-width: 580px; margin: 24px auto 0; background: rgba(48, 209, 88, 0.08); border: 1px solid rgba(48, 209, 88, 0.3); border-radius: 12px; padding: 14px 18px; text-align: left; font-size: 0.9rem; line-height: 1.55;">
@@ -915,7 +918,7 @@
     <!-- Installation Steps -->
     <section class="section-title" id="install">
       <h2>How to install and run Declutter Mac</h2>
-      <p>Three quick steps to get running on your Mac.</p>
+      <p>Four quick steps to get running on your Mac.</p>
     </section>
 
     <div class="install-section">
@@ -927,8 +930,22 @@
         </div>
       </div>
 
-      <div class="step-card">
+      <div class="step-card" id="first-open">
         <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Open it the first time</h4>
+          <p>The first time you open Declutter Mac, macOS may say it can't verify the app is free of malware. That's because it isn't from the App Store yet, not because anything is wrong. To open it:</p>
+          <ol style="margin: 8px 0 0; padding-left: 20px; line-height: 1.6;">
+            <li>Open the app once and click <strong>Done</strong> on the warning.</li>
+            <li>Go to <strong>System Settings &rarr; Privacy &amp; Security</strong> and scroll down.</li>
+            <li>Next to “DeclutterMac was blocked”, click <strong>Open Anyway</strong> and confirm with your password.</li>
+          </ol>
+          <p style="margin-top: 8px;">You only need to do this once. Installing with the Terminal command above skips this step.</p>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">3</div>
         <div class="step-content">
           <h4>Grant Full Disk Access</h4>
           <p>On first launch, follow the prompt to check Full Disk Access in macOS System Settings. This allows Declutter Mac to scan cache folders and calculate accurate folder sizes.</p>
@@ -936,7 +953,7 @@
       </div>
 
       <div class="step-card">
-        <div class="step-num">3</div>
+        <div class="step-num">4</div>
         <div class="step-content">
           <h4>Enter Your Lifetime Key</h4>
           <p>Paste your $3.99 lifetime license key into <strong>Settings &rarr; License & Edition</strong> or the Folder Organizer unlock prompt to unlock unlimited cleaning forever across all your Macs.</p>
